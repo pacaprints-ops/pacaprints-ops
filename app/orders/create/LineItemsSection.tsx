@@ -5,15 +5,13 @@
 
 import { useMemo } from "react";
 
+type Option = { id: string; name: string };
+
 export type OrderLineItemDraft = {
   key: string;
+  product_name: string;
   recipe_id: string | null;
   quantity: number;
-};
-
-type RecipeOption = {
-  id: string;
-  name: string;
 };
 
 function makeKey() {
@@ -24,76 +22,101 @@ function makeKey() {
   return `${Date.now()}_${Math.random().toString(16).slice(2)}`;
 }
 
+function makeBlank(): OrderLineItemDraft {
+  return {
+    key: makeKey(),
+    product_name: "",
+    recipe_id: null,
+    quantity: 1,
+  };
+}
+
 export default function LineItemsSection({
-  items,
-  setItems,
+  products,
   recipes,
+  value,
+  onChange,
 }: {
-  items: OrderLineItemDraft[];
-  setItems: (next: OrderLineItemDraft[]) => void;
-  recipes: RecipeOption[];
+  products: Option[];
+  recipes: Option[];
+  value: OrderLineItemDraft[];
+  onChange: (next: OrderLineItemDraft[]) => void;
 }) {
-  const recipeOptions = useMemo(() => recipes ?? [], [recipes]);
+  const productNames = useMemo(
+    () => (products ?? []).map((p) => p.name).filter(Boolean),
+    [products]
+  );
 
-  function addItem() {
-    setItems([
-      ...items,
-      {
-        key: makeKey(),
-        recipe_id: null,
-        quantity: 1,
-      },
-    ]);
+  function update(key: string, patch: Partial<OrderLineItemDraft>) {
+    onChange(value.map((v) => (v.key === key ? { ...v, ...patch } : v)));
   }
 
-  function removeItem(key: string) {
-    const next = items.filter((x) => x.key !== key);
-    setItems(next.length ? next : [{ key: makeKey(), recipe_id: null, quantity: 1 }]);
+  function addLine() {
+    onChange([...(value ?? []), makeBlank()]);
   }
 
-  function updateItem(key: string, patch: Partial<OrderLineItemDraft>) {
-    setItems(items.map((x) => (x.key === key ? { ...x, ...patch } : x)));
+  function removeLine(key: string) {
+    const next = (value ?? []).filter((v) => v.key !== key);
+    onChange(next.length ? next : [makeBlank()]);
   }
 
   return (
-    <div className="pp-card p-5">
+    <div className="rounded-lg border bg-white p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <div className="text-sm font-extrabold text-slate-900">Line items</div>
-          <div className="mt-1 text-xs text-slate-600">
-            Add one or more recipes and quantities for this order.
+          <div className="text-sm font-semibold text-gray-900">Line items</div>
+          <div className="mt-1 text-xs text-gray-500">
+            Add a product name + recipe for FIFO costing.
           </div>
         </div>
 
-        <button type="button" className="pp-btn pp-btn-secondary" onClick={addItem}>
-          + Add item
+        <button
+          type="button"
+          onClick={addLine}
+          className="rounded-lg border bg-white px-3 py-2 text-sm font-semibold text-gray-900"
+        >
+          + Add line
         </button>
       </div>
 
       <div className="mt-4 space-y-3">
-        {items.map((item, idx) => (
+        {(value ?? []).map((line, idx) => (
           <div
-            key={item.key}
-            className="rounded-2xl bg-white p-4"
-            style={{
-              border: "1px solid rgba(0,0,0,0.06)",
-              boxShadow: "0 6px 18px rgba(0,0,0,0.06)",
-            }}
+            key={line.key}
+            className="rounded-xl border bg-white p-3"
           >
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-12 sm:items-end">
-              <div className="sm:col-span-8">
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+              {/* Product name (free text, suggest from existing products) */}
+              <div className="sm:col-span-6">
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Product name
+                </label>
+                <input
+                  list="product_name_suggestions"
+                  type="text"
+                  className="w-full rounded-lg border bg-white px-3 py-2 text-sm"
+                  placeholder="e.g. Derek Valentine Card"
+                  value={line.product_name ?? ""}
+                  onChange={(e) =>
+                    update(line.key, { product_name: e.target.value })
+                  }
+                />
+              </div>
+
+              {/* Recipe */}
+              <div className="sm:col-span-4">
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
                   Recipe
                 </label>
                 <select
-                  className="pp-select"
-                  value={item.recipe_id ?? ""}
+                  className="w-full rounded-lg border bg-white px-3 py-2 text-sm"
+                  value={line.recipe_id ?? ""}
                   onChange={(e) =>
-                    updateItem(item.key, { recipe_id: e.target.value || null })
+                    update(line.key, { recipe_id: e.target.value || null })
                   }
                 >
                   <option value="">Select…</option>
-                  {recipeOptions.map((r) => (
+                  {(recipes ?? []).map((r) => (
                     <option key={r.id} value={r.id}>
                       {r.name}
                     </option>
@@ -101,28 +124,32 @@ export default function LineItemsSection({
                 </select>
               </div>
 
-              <div className="sm:col-span-3">
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Quantity
+              {/* Qty */}
+              <div className="sm:col-span-1">
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Qty
                 </label>
                 <input
                   type="number"
                   min={1}
-                  className="pp-input"
-                  value={item.quantity}
+                  className="w-full rounded-lg border bg-white px-3 py-2 text-sm"
+                  value={line.quantity ?? 1}
                   onChange={(e) => {
                     const n = Number(e.target.value);
-                    updateItem(item.key, { quantity: Number.isFinite(n) && n > 0 ? n : 1 });
+                    update(line.key, {
+                      quantity: Number.isFinite(n) && n > 0 ? n : 1,
+                    });
                   }}
                 />
               </div>
 
+              {/* Remove */}
               <div className="sm:col-span-1 flex sm:justify-end">
                 <button
                   type="button"
-                  className="pp-btn pp-btn-secondary"
-                  onClick={() => removeItem(item.key)}
-                  aria-label={`Remove line item ${idx + 1}`}
+                  onClick={() => removeLine(line.key)}
+                  className="rounded-lg border bg-white px-3 py-2 text-sm font-semibold text-gray-900"
+                  aria-label={`Remove line ${idx + 1}`}
                   title="Remove"
                 >
                   ✕
@@ -132,6 +159,13 @@ export default function LineItemsSection({
           </div>
         ))}
       </div>
+
+      {/* Suggestions list */}
+      <datalist id="product_name_suggestions">
+        {productNames.map((name) => (
+          <option key={name} value={name} />
+        ))}
+      </datalist>
     </div>
   );
 }
