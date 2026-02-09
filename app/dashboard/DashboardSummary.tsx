@@ -1,6 +1,4 @@
 
-// pacaprints-ops/app/dashboard/DashboardSummary.tsx
-
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -60,9 +58,7 @@ function formatGBP(value: number) {
   }).format(value ?? 0);
 }
 function formatInt(value: number) {
-  return new Intl.NumberFormat("en-GB", { maximumFractionDigits: 0 }).format(
-    value ?? 0
-  );
+  return new Intl.NumberFormat("en-GB", { maximumFractionDigits: 0 }).format(value ?? 0);
 }
 function monthLabel(i: number) {
   return new Date(2000, i, 1).toLocaleString("en-GB", { month: "short" });
@@ -94,12 +90,10 @@ function downloadCSV(filename: string, rows: string[][]) {
 
 function StatCard({ title, value }: { title: string; value: string | number }) {
   return (
-    <div className="pp-card-strong">
-      <div className="pp-stat">
-        <div className="pp-stat-label">{title}</div>
-        <div className="pp-stat-value min-h-[44px] flex items-center justify-center">
-          {value}
-        </div>
+    <div className="rounded-xl border bg-white p-4 shadow-sm">
+      <div className="text-sm font-semibold text-gray-900 text-center">{title}</div>
+      <div className="mt-4 flex items-center justify-center text-2xl font-semibold text-gray-900 min-h-[44px]">
+        {value}
       </div>
     </div>
   );
@@ -145,23 +139,13 @@ export default function DashboardSummary() {
     const tomorrow = addDays(today, 1);
 
     if (timeframe === "mtd") {
-      return {
-        fromDate: isoDate(startOfMonth(today)),
-        toDateExclusive: isoDate(tomorrow),
-      };
+      return { fromDate: isoDate(startOfMonth(today)), toDateExclusive: isoDate(tomorrow) };
     }
 
     if (timeframe === "last_month") {
       const firstThisMonth = startOfMonth(today);
-      const firstLastMonth = new Date(
-        firstThisMonth.getFullYear(),
-        firstThisMonth.getMonth() - 1,
-        1
-      );
-      return {
-        fromDate: isoDate(firstLastMonth),
-        toDateExclusive: isoDate(firstThisMonth),
-      };
+      const firstLastMonth = new Date(firstThisMonth.getFullYear(), firstThisMonth.getMonth() - 1, 1);
+      return { fromDate: isoDate(firstLastMonth), toDateExclusive: isoDate(firstThisMonth) };
     }
 
     const inclusiveTo = customTo || todayIso;
@@ -284,10 +268,7 @@ export default function DashboardSummary() {
     }
 
     try {
-      const [aRows, bRows] = await Promise.all([
-        fetchYear(yearA),
-        fetchYear(yearB),
-      ]);
+      const [aRows, bRows] = await Promise.all([fetchYear(yearA), fetchYear(yearB)]);
 
       function aggregate(rows: OrderRow[]) {
         const byMonth = Array.from({ length: 12 }, () => ({
@@ -373,188 +354,138 @@ export default function DashboardSummary() {
   const yearB = yearA - 1;
 
   return (
-    <div className="space-y-6">
+    <div className="p-6">
       {/* Header */}
-      <div className="pp-card p-5">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h1 className="text-2xl font-extrabold text-slate-900">
-              PacaPrints Dashboard
-            </h1>
-            <p className="mt-1 text-sm text-slate-600">
-              Showing:{" "}
-              <span className="font-semibold text-slate-800">
-                {timeframe === "mtd"
-                  ? "MTD"
-                  : timeframe === "last_month"
-                  ? "Last month"
-                  : "Custom range"}
-              </span>
-              {" · "}
-              <span className="font-semibold text-slate-800">
-                {platformValueToSend ? platformValueToSend : "All platforms"}
-              </span>
-              {" · "}
-              <span className="font-semibold text-slate-800">
-                {fromDate} →{" "}
-                {timeframe === "custom"
-                  ? customTo
-                  : isoDate(addDays(new Date(toDateExclusive), -1))}
-              </span>
-            </p>
+      <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">PacaPrints Dashboard</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Showing:{" "}
+            <span className="font-medium text-gray-700">
+              {timeframe === "mtd" ? "MTD" : timeframe === "last_month" ? "Last month" : "Custom range"}
+            </span>
+            {" · "}
+            <span className="font-medium text-gray-700">
+              {platformValueToSend ? platformValueToSend : "All platforms"}
+            </span>
+            {" · "}
+            <span className="font-medium text-gray-700">
+              {fromDate} → {timeframe === "custom" ? customTo : isoDate(addDays(new Date(toDateExclusive), -1))}
+            </span>
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Platform */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-semibold text-gray-900">Platform</label>
+            <select
+              className="rounded-lg border bg-white px-3 py-2 text-sm"
+              value={platform}
+              onChange={(e) => setPlatform(e.target.value)}
+            >
+              <option value="">All</option>
+              <option value="tiktok">TikTok</option>
+              <option value="etsy">Etsy</option>
+              <option value="ebay">eBay</option>
+              <option value="shopify">Shopify</option>
+              <option value="custom">Custom</option>
+            </select>
           </div>
 
-          <div className="flex flex-wrap items-end gap-3">
-            {/* Platform */}
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-semibold text-slate-900">
-                Platform
-              </label>
-              <select
-                className="pp-select"
-                value={platform}
-                onChange={(e) => setPlatform(e.target.value)}
-              >
-                <option value="">All</option>
-                <option value="tiktok">TikTok</option>
-                <option value="etsy">Etsy</option>
-                <option value="ebay">eBay</option>
-                <option value="shopify">Shopify</option>
-                <option value="custom">Custom</option>
-              </select>
-            </div>
+          {platform === "custom" && (
+            <input
+              type="text"
+              placeholder="Type platform value…"
+              className="rounded-lg border bg-white px-3 py-2 text-sm"
+              value={platformCustom}
+              onChange={(e) => setPlatformCustom(e.target.value)}
+            />
+          )}
 
-            {platform === "custom" && (
-              <div className="flex flex-col gap-1">
-                <label className="text-sm font-semibold text-slate-900">
-                  Custom
-                </label>
-                <input
-                  type="text"
-                  placeholder="Type platform value…"
-                  className="pp-input"
-                  value={platformCustom}
-                  onChange={(e) => setPlatformCustom(e.target.value)}
-                />
-              </div>
-            )}
-
-            {/* Time */}
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-semibold text-slate-900">
-                Time
-              </label>
-              <select
-                className="pp-select"
-                value={timeframe}
-                onChange={(e) => setTimeframe(e.target.value)}
-              >
-                <option value="mtd">MTD</option>
-                <option value="last_month">Last Month</option>
-                <option value="custom">Custom range</option>
-              </select>
-            </div>
-
-            {timeframe === "custom" && (
-              <div className="flex flex-wrap items-end gap-3">
-                <div className="flex flex-col gap-1">
-                  <label className="text-sm font-semibold text-slate-900">
-                    From
-                  </label>
-                  <input
-                    type="date"
-                    className="pp-input"
-                    value={customFrom}
-                    onChange={(e) => setCustomFrom(e.target.value)}
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-sm font-semibold text-slate-900">
-                    To
-                  </label>
-                  <input
-                    type="date"
-                    className="pp-input"
-                    value={customTo}
-                    onChange={(e) => setCustomTo(e.target.value)}
-                  />
-                </div>
-              </div>
-            )}
+          {/* Time */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-semibold text-gray-900">Time</label>
+            <select
+              className="rounded-lg border bg-white px-3 py-2 text-sm"
+              value={timeframe}
+              onChange={(e) => setTimeframe(e.target.value)}
+            >
+              <option value="mtd">MTD</option>
+              <option value="last_month">Last Month</option>
+              <option value="custom">Custom range</option>
+            </select>
           </div>
+
+          {timeframe === "custom" && (
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="text-sm font-semibold text-gray-900">From</label>
+              <input
+                type="date"
+                className="rounded-lg border bg-white px-3 py-2 text-sm"
+                value={customFrom}
+                onChange={(e) => setCustomFrom(e.target.value)}
+              />
+              <label className="text-sm font-semibold text-gray-900">To</label>
+              <input
+                type="date"
+                className="rounded-lg border bg-white px-3 py-2 text-sm"
+                value={customTo}
+                onChange={(e) => setCustomTo(e.target.value)}
+              />
+            </div>
+          )}
         </div>
       </div>
 
       {/* Errors */}
       {errorMsg ? (
-        <div className="pp-card p-4">
-          <div className="text-sm font-semibold text-red-700">
-            Failed to load dashboard summary: {errorMsg}
-          </div>
+        <div className="mb-6 rounded-lg border bg-red-50 p-3 text-sm text-red-700">
+          Failed to load dashboard summary: {errorMsg}
         </div>
       ) : null}
 
       {/* Top Boxes */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
-        <StatCard
-          title="Total Orders"
-          value={loading || !summary ? "—" : formatInt(toNumber(summary.order_count))}
-        />
-        <StatCard
-          title="Revenue"
-          value={loading || !summary ? "—" : formatGBP(toNumber(summary.revenue))}
-        />
-        <StatCard
-          title="Cost"
-          value={loading || !summary ? "—" : formatGBP(toNumber(summary.cogs))}
-        />
-        <StatCard
-          title="Profit"
-          value={loading || !summary ? "—" : formatGBP(toNumber(summary.profit))}
-        />
+        <StatCard title="Total Orders" value={loading || !summary ? "—" : formatInt(toNumber(summary.order_count))} />
+        <StatCard title="Revenue" value={loading || !summary ? "—" : formatGBP(toNumber(summary.revenue))} />
+        <StatCard title="Cost" value={loading || !summary ? "—" : formatGBP(toNumber(summary.cogs))} />
+        <StatCard title="Profit" value={loading || !summary ? "—" : formatGBP(toNumber(summary.profit))} />
         <StatCard title="Refunded" value={loading ? "—" : formatInt(refundedCount)} />
       </div>
 
       {/* Second row */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="pp-card p-5 text-center">
-          <div className="text-sm font-extrabold text-slate-900">
-            Low Stock Alert
-          </div>
-          <div
-            className={`mt-4 text-3xl font-extrabold ${
-              lowStockCount > 0 ? "text-red-700" : "text-slate-900"
-            }`}
-          >
+      <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="rounded-xl border bg-white p-4 text-center shadow-sm">
+          <div className="text-sm font-semibold text-gray-900">Low Stock Alert</div>
+          <div className={`mt-4 text-2xl font-semibold ${lowStockCount > 0 ? "text-red-700" : "text-gray-900"}`}>
             {formatInt(lowStockCount)}
           </div>
-          <div className="mt-2 text-xs text-slate-600">
-            Count of raw materials where on-hand &lt; reorder level
-          </div>
+          <div className="mt-2 text-xs text-gray-500">Count of raw materials where on-hand &lt; reorder level</div>
         </div>
 
-        <div className="pp-card p-5 text-center">
-          <div className="text-sm font-extrabold text-slate-900">
-            Total Stock Value
-          </div>
-          <div className="mt-4 text-3xl font-extrabold text-slate-900">
+        <div className="rounded-xl border bg-white p-4 text-center shadow-sm">
+          <div className="text-sm font-semibold text-gray-900">Total Stock Value</div>
+          <div className="mt-4 text-2xl font-semibold text-gray-900">
             {loading || !summary ? "—" : formatGBP(toNumber(summary.stock_value))}
           </div>
-          <div className="mt-2 text-xs text-slate-600">
-            Always total (not affected by timeframe)
-          </div>
+          <div className="mt-2 text-xs text-gray-500">Always total (not affected by timeframe)</div>
         </div>
       </div>
 
       {/* Monthly table */}
-      <div className="pp-card p-5">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <div className="text-sm font-extrabold text-slate-900">
+      <div className="mt-10">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div className="text-sm font-semibold text-gray-900">
             Monthly totals ({yearB} vs {yearA})
+            <div className="mt-1 text-xs font-normal text-gray-500 md:hidden">
+              Swipe sideways to see {yearA} →
+            </div>
           </div>
+
           <button
             type="button"
-            className="pp-btn pp-btn-secondary"
+            className="rounded-lg border bg-white px-3 py-2 text-sm font-semibold text-gray-900"
             disabled={monthlyLoading || !!monthlyError || monthly.length === 0}
             onClick={exportMonthlyCSV}
           >
@@ -563,49 +494,50 @@ export default function DashboardSummary() {
         </div>
 
         {monthlyError ? (
-          <div className="pp-card p-4">
-            <div className="text-sm font-semibold text-red-700">
-              Failed to load monthly table: {monthlyError}
-            </div>
+          <div className="rounded-lg border bg-red-50 p-3 text-sm text-red-700">
+            Failed to load monthly table: {monthlyError}
           </div>
         ) : monthlyLoading ? (
-          <div className="text-sm text-slate-600">Loading monthly table…</div>
+          <div className="text-sm text-gray-600">Loading monthly table…</div>
         ) : (
-          <div className="pp-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>Month</th>
-                  <th>{yearB} Orders</th>
-                  <th>{yearB} Revenue</th>
-                  <th>{yearB} Cost</th>
-                  <th>{yearB} Profit</th>
-                  <th>{yearA} Orders</th>
-                  <th>{yearA} Revenue</th>
-                  <th>{yearA} Cost</th>
-                  <th>{yearA} Profit</th>
-                </tr>
-              </thead>
-              <tbody>
-                {monthly.map((r) => (
-                  <tr key={r.monthIndex}>
-                    <td className="font-semibold text-slate-900">
-                      {monthLabel(r.monthIndex)}
-                    </td>
-
-                    <td>{formatInt(r.b.orders)}</td>
-                    <td>{formatGBP(r.b.revenue)}</td>
-                    <td>{formatGBP(r.b.cogs)}</td>
-                    <td>{formatGBP(r.b.profit)}</td>
-
-                    <td>{formatInt(r.a.orders)}</td>
-                    <td>{formatGBP(r.a.revenue)}</td>
-                    <td>{formatGBP(r.a.cogs)}</td>
-                    <td>{formatGBP(r.a.profit)}</td>
+          <div className="rounded-xl border bg-white shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="min-w-[1100px] text-sm">
+                <thead className="border-b bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-900 whitespace-nowrap">Month</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-900 whitespace-nowrap">{yearB} Orders</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-900 whitespace-nowrap">{yearB} Revenue</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-900 whitespace-nowrap">{yearB} Cost</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-900 whitespace-nowrap">{yearB} Profit</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-900 whitespace-nowrap">{yearA} Orders</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-900 whitespace-nowrap">{yearA} Revenue</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-900 whitespace-nowrap">{yearA} Cost</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-900 whitespace-nowrap">{yearA} Profit</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+
+                <tbody>
+                  {monthly.map((r) => (
+                    <tr key={r.monthIndex} className="border-b last:border-b-0">
+                      <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">
+                        {monthLabel(r.monthIndex)}
+                      </td>
+
+                      <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{formatInt(r.b.orders)}</td>
+                      <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{formatGBP(r.b.revenue)}</td>
+                      <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{formatGBP(r.b.cogs)}</td>
+                      <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{formatGBP(r.b.profit)}</td>
+
+                      <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{formatInt(r.a.orders)}</td>
+                      <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{formatGBP(r.a.revenue)}</td>
+                      <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{formatGBP(r.a.cogs)}</td>
+                      <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{formatGBP(r.a.profit)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
