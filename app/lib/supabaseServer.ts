@@ -1,8 +1,14 @@
-import { cookies } from "next/headers";
-import { createServerClient } from "@supabase/ssr";
+// pacaprints-ops/app/lib/supabaseServer.ts
 
-export function supabaseServer() {
-  const cookieStore = cookies();
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+
+/**
+ * Server-side Supabase client for Next.js App Router (Next 15/16 style cookies()).
+ * cookies() returns a Promise in newer Next versions, so we must await it.
+ */
+export async function supabaseServer() {
+  const cookieStore = await cookies();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,7 +24,7 @@ export function supabaseServer() {
               cookieStore.set(name, value, options);
             });
           } catch {
-            // Ignore if called from a Server Component (Next restriction)
+            // If called from a Server Component where setting cookies isn't allowed, ignore.
           }
         },
       },
