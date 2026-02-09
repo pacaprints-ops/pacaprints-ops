@@ -1,10 +1,12 @@
+// pacaprints-ops/app/login/LoginClient.tsx
+
 "use client";
 
 import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabaseBrowser } from "../lib/supabaseBrowser";
 
-export default function LoginPage() {
+export default function LoginClient() {
   const router = useRouter();
   const sp = useSearchParams();
   const redirectTo = useMemo(() => sp.get("redirect") || "/dashboard", [sp]);
