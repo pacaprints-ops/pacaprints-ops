@@ -1,0 +1,211 @@
+
+/* pacaprints-ops/app/globals.css */
+@import "tailwindcss";
+
+/* Brand tokens */
+:root {
+  --pp-teal: #b8e0d2;
+  --pp-peach: #f7d9c4;
+  --pp-ink: #1f2937;
+  --pp-bg: #fffaf7;
+
+  /* derived */
+  --pp-teal-soft: rgba(184, 224, 210, 0.28);
+  --pp-teal-border: rgba(184, 224, 210, 0.65);
+  --pp-peach-soft: rgba(247, 217, 196, 0.35);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  color: var(--pp-ink);
+  background: var(--pp-bg);
+}
+
+/* =====================
+   Layout helpers
+   ===================== */
+
+.pp-container {
+  @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+
+/* =====================
+   Cards / Boxes
+   ===================== */
+
+.pp-card {
+  @apply rounded-2xl bg-white;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.pp-card-strong {
+  @apply rounded-2xl bg-white;
+  border: 2px solid var(--pp-teal-border);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.10);
+}
+
+/* Dashboard stat content helper */
+.pp-stat {
+  @apply flex flex-col items-center justify-center text-center gap-1 p-5;
+}
+
+.pp-stat-label {
+  @apply text-sm font-semibold;
+  color: rgba(31, 41, 55, 0.7);
+}
+
+.pp-stat-value {
+  @apply text-3xl font-extrabold;
+}
+
+/* =====================
+   Buttons
+   ===================== */
+
+.pp-btn {
+  @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition;
+}
+
+.pp-btn-primary {
+  @apply text-slate-900;
+  background: var(--pp-teal);
+  border: 1px solid rgba(184, 224, 210, 0.8);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+}
+
+.pp-btn-primary:hover {
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.12);
+}
+
+.pp-btn-secondary {
+  @apply text-slate-900;
+  background: #fff;
+  border: 1px solid rgba(184, 224, 210, 0.7);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+.pp-btn-secondary:hover {
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.10);
+}
+
+/* =====================
+   Inputs
+   ===================== */
+
+.pp-input,
+.pp-select {
+  @apply w-full rounded-xl bg-white px-3 py-2 text-sm focus:outline-none;
+  border: 1px solid rgba(184, 224, 210, 0.55);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+/* =====================
+   Tables (GLOBAL)
+   ===================== */
+
+.pp-table {
+  @apply w-full overflow-hidden rounded-2xl bg-white;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+.pp-table table {
+  @apply w-full text-sm;
+  border-collapse: collapse;
+}
+
+.pp-table thead th {
+  @apply px-4 py-3 text-left text-sm font-extrabold;
+  background: var(--pp-teal-soft);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.pp-table tbody td {
+  @apply px-4 py-3 align-middle;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* alternating row tint (light peach) */
+.pp-table tbody tr:nth-child(even) td {
+  background: var(--pp-peach-soft);
+}
+
+/* subtle hover */
+.pp-table tbody tr:hover td {
+  background: rgba(184, 224, 210, 0.18);
+}
+
+/* Pills */
+.pp-pill {
+  @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold;
+  background: rgba(184, 224, 210, 0.28);
+  border: 1px solid rgba(184, 224, 210, 0.65);
+}
+
+.pp-subtle {
+  @apply text-slate-600;
+}
+
+/* ===================================================================
+   AUTO-SKIN (so older pages match dashboard without rewriting them)
+   =================================================================== */
+
+/* Any "white card with border + shadow" becomes our pp-card look */
+.rounded-xl.border.bg-white.p-4.shadow-sm,
+.rounded-xl.border.bg-white.p-5.shadow-sm,
+.rounded-xl.border.bg-white.p-6.shadow-sm,
+.rounded-lg.border.bg-white.p-4.shadow-sm,
+.rounded-lg.border.bg-white.p-5.shadow-sm,
+.rounded-lg.border.bg-white.p-6.shadow-sm {
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06) !important;
+  border-radius: 1rem !important; /* closer to your 2xl look */
+}
+
+/* Make most bordered boxes look softer (removes heavy black borders) */
+.border {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Make default table headers bold + teal-tinted if pages still use bg-gray-50 */
+table thead th {
+  font-weight: 800;
+}
+
+/* If a page uses bg-gray-50 for table head, tint it to teal instead */
+.bg-gray-50 {
+  background: var(--pp-teal-soft) !important;
+}
+
+/* Alternating row tint for ANY table (even if not wrapped in pp-table) */
+table tbody tr:nth-child(even) td {
+  background: var(--pp-peach-soft);
+}
+
+/* Subtle hover for ANY table */
+table tbody tr:hover td {
+  background: rgba(184, 224, 210, 0.18);
+}
+
+/* Inputs/selects that are still using old rounded-lg border px-3 py-2 */
+input.rounded-lg.border,
+select.rounded-lg.border {
+  border-radius: 0.75rem !important;
+  border-color: rgba(184, 224, 210, 0.55) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Buttons that are still "rounded-lg border bg-white px-3 py-2" */
+button.rounded-lg.border.bg-white {
+  border-radius: 0.75rem !important;
+  border-color: rgba(184, 224, 210, 0.7) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06) !important;
+}
+button.rounded-lg.border.bg-white:hover {
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.10) !important;
+}
