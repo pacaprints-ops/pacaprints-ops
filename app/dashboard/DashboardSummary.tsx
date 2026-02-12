@@ -11,7 +11,7 @@ type DashboardSummaryRow = {
   platform: string | null;
   revenue: number; // payout (net received)
   cogs: number; // product/material cost
-  profit: number; // (may be cogs-only depending on RPC) — we won't rely on this
+  profit: number; // we won't rely on this for the cards
   order_count: number;
   stock_value: number;
 };
@@ -115,7 +115,7 @@ export default function DashboardSummary() {
   const [refundedCount, setRefundedCount] = useState<number>(0);
   const [lowStockCount, setLowStockCount] = useState<number>(0);
 
-  // NEW: shipping sum for timeframe (non-refunded)
+  // Shipping sum for timeframe (non-refunded)
   const [shippingSum, setShippingSum] = useState<number>(0);
 
   const [monthlyLoading, setMonthlyLoading] = useState<boolean>(true);
@@ -183,7 +183,6 @@ export default function DashboardSummary() {
   }
 
   async function loadShippingSum() {
-    // Sum shipping_cost for the timeframe, excluding refunded orders
     let q = supabase
       .from("orders")
       .select("shipping_cost,is_refunded")
@@ -283,7 +282,7 @@ export default function DashboardSummary() {
 
       if (platformFilter) q = q.eq("platform", platformFilter);
 
-      // Exclude refunded from monthly table
+      // Exclude refunded
       q = q.or("is_refunded.is.null,is_refunded.eq.false");
 
       const { data, error } = await q;
@@ -339,7 +338,6 @@ export default function DashboardSummary() {
     const yearA = now.getFullYear();
     const yearB = yearA - 1;
 
-    // 2026 first, then 2025
     const header = [
       "Month",
       `${yearA} Orders`,
@@ -380,7 +378,7 @@ export default function DashboardSummary() {
   const yearA = now.getFullYear();
   const yearB = yearA - 1;
 
-  // Derived figures for the cards (what you asked for)
+  // Cards: payout revenue, ALL-IN cost (cogs + shipping), profit = revenue - cost
   const revenuePayout = loading || !summary ? null : toNumber(summary.revenue);
   const cogsOnly = loading || !summary ? null : toNumber(summary.cogs);
   const costAllIn = revenuePayout === null || cogsOnly === null ? null : cogsOnly + toNumber(shippingSum);
@@ -411,7 +409,6 @@ export default function DashboardSummary() {
           </div>
 
           <div className="flex flex-wrap items-end gap-3">
-            {/* Platform */}
             <div className="flex flex-col gap-1">
               <label className="text-sm font-semibold text-slate-900">Platform</label>
               <select className="pp-select" value={platform} onChange={(e) => setPlatform(e.target.value)}>
@@ -437,7 +434,6 @@ export default function DashboardSummary() {
               </div>
             )}
 
-            {/* Time */}
             <div className="flex flex-col gap-1">
               <label className="text-sm font-semibold text-slate-900">Time</label>
               <select className="pp-select" value={timeframe} onChange={(e) => setTimeframe(e.target.value)}>
@@ -473,7 +469,6 @@ export default function DashboardSummary() {
         </div>
       </div>
 
-      {/* Errors */}
       {errorMsg ? (
         <div className="pp-card p-4">
           <div className="text-sm font-semibold text-red-700">Failed to load dashboard summary: {errorMsg}</div>
@@ -529,39 +524,42 @@ export default function DashboardSummary() {
         ) : monthlyLoading ? (
           <div className="text-sm text-slate-600">Loading monthly table…</div>
         ) : (
-          <div className="pp-table overflow-x-auto">
-            <table className="min-w-[980px]">
-              <thead>
-                <tr>
-                  <th>Month</th>
-                  <th>{yearA} Orders</th>
-                  <th>{yearA} Revenue</th>
-                  <th>{yearA} Cost</th>
-                  <th>{yearA} Profit</th>
-                  <th>{yearB} Orders</th>
-                  <th>{yearB} Revenue</th>
-                  <th>{yearB} Cost</th>
-                  <th>{yearB} Profit</th>
-                </tr>
-              </thead>
-              <tbody>
-                {monthly.map((r) => (
-                  <tr key={r.monthIndex}>
-                    <td className="font-semibold text-slate-900">{monthLabel(r.monthIndex)}</td>
-
-                    <td>{formatInt(r.a.orders)}</td>
-                    <td>{formatGBP(r.a.revenue)}</td>
-                    <td>{formatGBP(r.a.cogs)}</td>
-                    <td>{formatGBP(r.a.profit)}</td>
-
-                    <td>{formatInt(r.b.orders)}</td>
-                    <td>{formatGBP(r.b.revenue)}</td>
-                    <td>{formatGBP(r.b.cogs)}</td>
-                    <td>{formatGBP(r.b.profit)}</td>
+          // ✅ Dedicated horizontal scroll wrapper (mobile swipe)
+          <div className="-mx-5 overflow-x-auto px-5" style={{ WebkitOverflowScrolling: "touch" }}>
+            <div className="pp-table">
+              <table className="min-w-[980px]">
+                <thead>
+                  <tr>
+                    <th>Month</th>
+                    <th>{yearA} Orders</th>
+                    <th>{yearA} Revenue</th>
+                    <th>{yearA} Cost</th>
+                    <th>{yearA} Profit</th>
+                    <th>{yearB} Orders</th>
+                    <th>{yearB} Revenue</th>
+                    <th>{yearB} Cost</th>
+                    <th>{yearB} Profit</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {monthly.map((r) => (
+                    <tr key={r.monthIndex}>
+                      <td className="font-semibold text-slate-900">{monthLabel(r.monthIndex)}</td>
+
+                      <td>{formatInt(r.a.orders)}</td>
+                      <td>{formatGBP(r.a.revenue)}</td>
+                      <td>{formatGBP(r.a.cogs)}</td>
+                      <td>{formatGBP(r.a.profit)}</td>
+
+                      <td>{formatInt(r.b.orders)}</td>
+                      <td>{formatGBP(r.b.revenue)}</td>
+                      <td>{formatGBP(r.b.cogs)}</td>
+                      <td>{formatGBP(r.b.profit)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
