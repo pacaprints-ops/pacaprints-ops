@@ -50,13 +50,18 @@ export default function LineItemsSection({
   }
 
   function addLine() {
-    onChange([...(value ?? []), makeBlank()]);
+    const next = [...(value ?? [])];
+    next.push(makeBlank());
+    onChange(next);
   }
 
   function removeLine(key: string) {
     const next = (value ?? []).filter((v) => v.key !== key);
     onChange(next.length ? next : [makeBlank()]);
   }
+
+  // If parent passes empty array, show one blank row by default
+  const linesToRender = (value?.length ?? 0) > 0 ? value : [makeBlank()];
 
   return (
     <div className="pp-card p-4">
@@ -74,7 +79,7 @@ export default function LineItemsSection({
       </div>
 
       <div className="mt-4 space-y-3">
-        {(value ?? []).map((line, idx) => (
+        {linesToRender.map((line, idx) => (
           <div key={line.key} className="pp-card p-3">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-12 sm:items-end">
               {/* Product name */}
@@ -117,16 +122,17 @@ export default function LineItemsSection({
                 <input
                   type="number"
                   min={1}
+                  step={1}
                   inputMode="numeric"
-                  className="pp-input w-full text-center tabular-nums"
+                  // Key fix: width + smaller padding so digits are visible even with spinner buttons
+                  className="pp-input w-[92px] min-w-[92px] px-2 text-center tabular-nums text-slate-900"
                   value={Number.isFinite(line.quantity) && line.quantity > 0 ? line.quantity : 1}
                   onWheel={(e) => {
-                    // prevents accidental scroll-wheel changing qty
+                    // prevent accidental scroll-wheel changes
                     (e.target as HTMLInputElement).blur();
                   }}
                   onChange={(e) => {
-                    const raw = e.target.value;
-                    const n = Number(raw);
+                    const n = Number(e.target.value);
                     update(line.key, { quantity: Number.isFinite(n) && n > 0 ? n : 1 });
                   }}
                 />
