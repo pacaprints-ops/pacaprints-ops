@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useMemo } from "react";
@@ -60,7 +59,6 @@ export default function LineItemsSection({
     onChange(next.length ? next : [makeBlank()]);
   }
 
-  // If parent passes empty array, show one blank row by default
   const linesToRender = (value?.length ?? 0) > 0 ? value : [makeBlank()];
 
   return (
@@ -116,39 +114,38 @@ export default function LineItemsSection({
                 </select>
               </div>
 
-              {/* Qty */}
-              <div className="sm:col-span-1">
+              {/* Qty (span 2 so it has room) */}
+              <div className="sm:col-span-2">
                 <label className="block text-xs font-extrabold text-slate-700 mb-1">Qty</label>
-                <input
-                  type="number"
-                  min={1}
-                  step={1}
-                  inputMode="numeric"
-                  // Key fix: width + smaller padding so digits are visible even with spinner buttons
-                  className="pp-input w-[92px] min-w-[92px] px-2 text-center tabular-nums text-slate-900"
-                  value={Number.isFinite(line.quantity) && line.quantity > 0 ? line.quantity : 1}
-                  onWheel={(e) => {
-                    // prevent accidental scroll-wheel changes
-                    (e.target as HTMLInputElement).blur();
-                  }}
-                  onChange={(e) => {
-                    const n = Number(e.target.value);
-                    update(line.key, { quantity: Number.isFinite(n) && n > 0 ? n : 1 });
-                  }}
-                />
-              </div>
 
-              {/* Remove */}
-              <div className="sm:col-span-1 flex sm:justify-end">
-                <button
-                  type="button"
-                  onClick={() => removeLine(line.key)}
-                  className="pp-btn pp-btn-secondary"
-                  aria-label={`Remove line ${idx + 1}`}
-                  title="Remove"
-                >
-                  ✕
-                </button>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={1}
+                    step={1}
+                    inputMode="numeric"
+                    className="pp-input w-[92px] min-w-[92px] px-2 text-center tabular-nums text-slate-900"
+                    value={Number.isFinite(line.quantity) && line.quantity > 0 ? line.quantity : 1}
+                    onWheel={(e) => {
+                      (e.target as HTMLInputElement).blur();
+                    }}
+                    onChange={(e) => {
+                      const n = Number(e.target.value);
+                      update(line.key, { quantity: Number.isFinite(n) && n > 0 ? n : 1 });
+                    }}
+                  />
+
+                  {/* Remove sits NEXT to qty so it never overlaps */}
+                  <button
+                    type="button"
+                    onClick={() => removeLine(line.key)}
+                    className="pp-btn pp-btn-secondary"
+                    aria-label={`Remove line ${idx + 1}`}
+                    title="Remove"
+                  >
+                    ✕
+                  </button>
+                </div>
               </div>
             </div>
           </div>
