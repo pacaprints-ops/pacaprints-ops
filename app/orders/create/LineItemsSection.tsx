@@ -1,6 +1,4 @@
 
-// pacaprints-ops/app/orders/create/LineItemsSection.tsx
-
 "use client";
 
 import { useMemo } from "react";
@@ -48,7 +46,7 @@ export default function LineItemsSection({
   );
 
   function update(key: string, patch: Partial<OrderLineItemDraft>) {
-    onChange(value.map((v) => (v.key === key ? { ...v, ...patch } : v)));
+    onChange((value ?? []).map((v) => (v.key === key ? { ...v, ...patch } : v)));
   }
 
   function addLine() {
@@ -61,59 +59,48 @@ export default function LineItemsSection({
   }
 
   return (
-    <div className="rounded-lg border bg-white p-4">
+    <div className="pp-card p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <div className="text-sm font-semibold text-gray-900">Line items</div>
-          <div className="mt-1 text-xs text-gray-500">
+          <div className="text-sm font-extrabold text-slate-900">Line items</div>
+          <div className="mt-1 text-xs text-slate-600">
             Add a product name + recipe for FIFO costing.
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={addLine}
-          className="rounded-lg border bg-white px-3 py-2 text-sm font-semibold text-gray-900"
-        >
+        <button type="button" onClick={addLine} className="pp-btn pp-btn-secondary">
           + Add line
         </button>
       </div>
 
       <div className="mt-4 space-y-3">
         {(value ?? []).map((line, idx) => (
-          <div
-            key={line.key}
-            className="rounded-xl border bg-white p-3"
-          >
+          <div key={line.key} className="pp-card p-3">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-12 sm:items-end">
-              {/* Product name (free text, suggest from existing products) */}
+              {/* Product name */}
               <div className="sm:col-span-6">
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label className="block text-xs font-extrabold text-slate-700 mb-1">
                   Product name
                 </label>
                 <input
                   list="product_name_suggestions"
                   type="text"
-                  className="w-full rounded-lg border bg-white px-3 py-2 text-sm"
+                  className="pp-input w-full"
                   placeholder="e.g. Derek Valentine Card"
                   value={line.product_name ?? ""}
-                  onChange={(e) =>
-                    update(line.key, { product_name: e.target.value })
-                  }
+                  onChange={(e) => update(line.key, { product_name: e.target.value })}
                 />
               </div>
 
               {/* Recipe */}
               <div className="sm:col-span-4">
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                <label className="block text-xs font-extrabold text-slate-700 mb-1">
                   Recipe
                 </label>
                 <select
-                  className="w-full rounded-lg border bg-white px-3 py-2 text-sm"
+                  className="pp-select w-full"
                   value={line.recipe_id ?? ""}
-                  onChange={(e) =>
-                    update(line.key, { recipe_id: e.target.value || null })
-                  }
+                  onChange={(e) => update(line.key, { recipe_id: e.target.value || null })}
                 >
                   <option value="">Select…</option>
                   {(recipes ?? []).map((r) => (
@@ -126,19 +113,21 @@ export default function LineItemsSection({
 
               {/* Qty */}
               <div className="sm:col-span-1">
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Qty
-                </label>
+                <label className="block text-xs font-extrabold text-slate-700 mb-1">Qty</label>
                 <input
                   type="number"
                   min={1}
-                  className="w-full rounded-lg border bg-white px-3 py-2 text-sm"
-                  value={line.quantity ?? 1}
+                  inputMode="numeric"
+                  className="pp-input w-full text-center tabular-nums"
+                  value={Number.isFinite(line.quantity) && line.quantity > 0 ? line.quantity : 1}
+                  onWheel={(e) => {
+                    // prevents accidental scroll-wheel changing qty
+                    (e.target as HTMLInputElement).blur();
+                  }}
                   onChange={(e) => {
-                    const n = Number(e.target.value);
-                    update(line.key, {
-                      quantity: Number.isFinite(n) && n > 0 ? n : 1,
-                    });
+                    const raw = e.target.value;
+                    const n = Number(raw);
+                    update(line.key, { quantity: Number.isFinite(n) && n > 0 ? n : 1 });
                   }}
                 />
               </div>
@@ -148,7 +137,7 @@ export default function LineItemsSection({
                 <button
                   type="button"
                   onClick={() => removeLine(line.key)}
-                  className="rounded-lg border bg-white px-3 py-2 text-sm font-semibold text-gray-900"
+                  className="pp-btn pp-btn-secondary"
                   aria-label={`Remove line ${idx + 1}`}
                   title="Remove"
                 >
@@ -160,7 +149,6 @@ export default function LineItemsSection({
         ))}
       </div>
 
-      {/* Suggestions list */}
       <datalist id="product_name_suggestions">
         {productNames.map((name) => (
           <option key={name} value={name} />
