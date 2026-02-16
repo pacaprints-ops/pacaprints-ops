@@ -1,4 +1,5 @@
- import Link from "next/link";
+ 
+import Link from "next/link";
 import ExportOrdersButton from "./ExportOrdersButton";
 import RevenueQuickEdit from "./RevenueQuickEdit";
 import OrderFlagsQuickToggle from "./OrderFlagsQuickToggle";
@@ -12,16 +13,28 @@ type OrderRow = {
   platform: string | null;
   platform_order_ref: string | null;
   customer_name: string | null;
+
+  // payout (net) - existing field you already use
   revenue: any;
+
   shipping_cost: any;
   discounts: any;
+
+  // FIFO COGS for non-historical orders
   total_cost: any;
+
   total_revenue: any;
   gross_profit: any;
+
   items_summary: string;
   is_settled: boolean;
   is_refunded: boolean;
   refund_notes: string | null;
+
+  // NEW FIELDS (may be missing from RPC until updated, so keep optional)
+  gross_revenue?: any;   // customer paid (gross)
+  platform_fees?: any;   // fees
+  cogs_override?: any;   // historical backfill COGS
 };
 
 function formatGBP(v: any) {
@@ -260,7 +273,12 @@ export default async function OrdersPage({
               className="rounded-lg border bg-white px-3 py-2 text-sm"
             />
             <span className="text-sm font-semibold text-gray-900">To</span>
-            <input type="date" name="to" defaultValue={customTo} className="rounded-lg border bg-white px-3 py-2 text-sm" />
+            <input
+              type="date"
+              name="to"
+              defaultValue={customTo}
+              className="rounded-lg border bg-white px-3 py-2 text-sm"
+            />
             <button className="rounded-lg border bg-white px-3 py-2 text-sm font-semibold">
               Apply
             </button>
@@ -285,8 +303,14 @@ export default async function OrdersPage({
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 whitespace-nowrap">Platform ref</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 whitespace-nowrap hidden md:table-cell">Products</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 whitespace-nowrap hidden md:table-cell">Customer</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 whitespace-nowrap">Revenue</th>
+
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 whitespace-nowrap">Gross</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 whitespace-nowrap hidden sm:table-cell">Fees</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 whitespace-nowrap">Payout</th>
+
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 whitespace-nowrap hidden sm:table-cell">COGS</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 whitespace-nowrap hidden sm:table-cell">Profit</th>
+
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 whitespace-nowrap">Status</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 whitespace-nowrap">Edit</th>
             </tr>
@@ -295,6 +319,14 @@ export default async function OrdersPage({
           <tbody>
             {rows.map((o) => {
               const rowClass = o.is_refunded ? "bg-gray-50 text-gray-500" : "";
+
+              // SAFE FALLBACKS (won't break until you import/update RPC)
+              const gross = Number((o as any).gross_revenue ?? o.revenue ?? 0);
+              const fees = Number((o as any).platform_fees ?? 0);
+              const payout = Number(o.revenue ?? 0);
+              const cogs = Number((o as any).cogs_override ?? o.total_cost ?? 0);
+              const profit = gross - fees - cogs;
+
               return (
                 <tr key={o.id} className={`border-b last:border-b-0 hover:bg-gray-50 ${rowClass}`}>
                   <td className="px-4 py-3 whitespace-nowrap">{o.order_no}</td>
@@ -319,12 +351,18 @@ export default async function OrdersPage({
 
                   <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell">{o.customer_name ?? "—"}</td>
 
+                  <td className="px-4 py-3 whitespace-nowrap">{formatGBP(gross)}</td>
+
+                  <td className="px-4 py-3 whitespace-nowrap hidden sm:table-cell">{formatGBP(fees)}</td>
+
                   <td className="px-4 py-3 whitespace-nowrap">
-                    {formatGBP(o.revenue)}
+                    {formatGBP(payout)}
                     <RevenueQuickEdit orderId={o.id} currentRevenue={o.revenue} />
                   </td>
 
-                  <td className="px-4 py-3 whitespace-nowrap hidden sm:table-cell">{formatGBP(o.total_cost)}</td>
+                  <td className="px-4 py-3 whitespace-nowrap hidden sm:table-cell">{formatGBP(cogs)}</td>
+
+                  <td className="px-4 py-3 whitespace-nowrap hidden sm:table-cell">{formatGBP(profit)}</td>
 
                   <td className="px-4 py-3 whitespace-nowrap">
                     <OrderFlagsQuickToggle
@@ -346,7 +384,7 @@ export default async function OrdersPage({
 
             {rows.length === 0 && (
               <tr>
-                <td colSpan={10} className="px-4 py-6 text-gray-600">
+                <td colSpan={13} className="px-4 py-6 text-gray-600">
                   No orders for this filter.
                 </td>
               </tr>
