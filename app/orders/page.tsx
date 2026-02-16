@@ -1,4 +1,4 @@
- 
+
 import Link from "next/link";
 import ExportOrdersButton from "./ExportOrdersButton";
 import RevenueQuickEdit from "./RevenueQuickEdit";
@@ -14,15 +14,14 @@ type OrderRow = {
   platform_order_ref: string | null;
   customer_name: string | null;
 
-  // payout (net) - existing field you already use
+  // payout (net) - existing
   revenue: any;
 
+  // postage you pay out (your edit page uses this in profit)
   shipping_cost: any;
+
   discounts: any;
-
-  // FIFO COGS for non-historical orders
-  total_cost: any;
-
+  total_cost: any; // FIFO COGS
   total_revenue: any;
   gross_profit: any;
 
@@ -31,10 +30,10 @@ type OrderRow = {
   is_refunded: boolean;
   refund_notes: string | null;
 
-  // NEW FIELDS (may be missing from RPC until updated, so keep optional)
-  gross_revenue?: any;   // customer paid (gross)
-  platform_fees?: any;   // fees
-  cogs_override?: any;   // historical backfill COGS
+  // new optional fields (will be filled by your rebuild/import)
+  gross_revenue?: any;
+  platform_fees?: any;
+  cogs_override?: any;
 };
 
 function formatGBP(v: any) {
@@ -308,6 +307,7 @@ export default async function OrdersPage({
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 whitespace-nowrap hidden sm:table-cell">Fees</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 whitespace-nowrap">Payout</th>
 
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 whitespace-nowrap hidden sm:table-cell">Shipping</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 whitespace-nowrap hidden sm:table-cell">COGS</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 whitespace-nowrap hidden sm:table-cell">Profit</th>
 
@@ -320,13 +320,20 @@ export default async function OrdersPage({
             {rows.map((o) => {
               const rowClass = o.is_refunded ? "bg-gray-50 text-gray-500" : "";
 
-              // SAFE FALLBACKS (won't break until you import/update RPC)
-             const gross = Number(o.gross_revenue ?? o.revenue ?? 0);
-const fees = Number(o.platform_fees ?? 0);
-const payout = Number(o.revenue ?? 0);
-const cogs = Number(o.cogs_override ?? o.total_cost ?? 0);
-const profit = gross - fees - cogs;
+              // Gross/fees will be filled by your rebuild/import.
+              // For now, fall back so nothing breaks.
+              const gross = Number(o.gross_revenue ?? o.revenue ?? 0);
+              const fees = Number(o.platform_fees ?? 0);
 
+              const payout = Number(o.revenue ?? 0);
+              const shipping = Number(o.shipping_cost ?? 0);
+
+              const cogs = Number(o.cogs_override ?? o.total_cost ?? 0);
+
+              // MATCHES your edit page definition:
+              // profit = payout - shipping - cogs
+              // (and when you fill gross/fees later, you can switch to gross-fees too)
+              const profit = payout - shipping - cogs;
 
               return (
                 <tr key={o.id} className={`border-b last:border-b-0 hover:bg-gray-50 ${rowClass}`}>
@@ -361,6 +368,8 @@ const profit = gross - fees - cogs;
                     <RevenueQuickEdit orderId={o.id} currentRevenue={o.revenue} />
                   </td>
 
+                  <td className="px-4 py-3 whitespace-nowrap hidden sm:table-cell">{formatGBP(shipping)}</td>
+
                   <td className="px-4 py-3 whitespace-nowrap hidden sm:table-cell">{formatGBP(cogs)}</td>
 
                   <td className="px-4 py-3 whitespace-nowrap hidden sm:table-cell">{formatGBP(profit)}</td>
@@ -385,7 +394,7 @@ const profit = gross - fees - cogs;
 
             {rows.length === 0 && (
               <tr>
-                <td colSpan={13} className="px-4 py-6 text-gray-600">
+                <td colSpan={14} className="px-4 py-6 text-gray-600">
                   No orders for this filter.
                 </td>
               </tr>
