@@ -321,11 +321,12 @@ export default async function OrdersPage({
               const rowClass = o.is_refunded ? "bg-gray-50 text-gray-500" : "";
 
               // SAFE FALLBACKS (won't break until you import/update RPC)
-              const gross = Number((o as any).gross_revenue ?? o.revenue ?? 0);
-              const fees = Number((o as any).platform_fees ?? 0);
-              const payout = Number(o.revenue ?? 0);
-              const cogs = Number((o as any).cogs_override ?? o.total_cost ?? 0);
-              const profit = gross - fees - cogs;
+             const gross = Number(o.gross_revenue ?? o.revenue ?? 0);
+const fees = Number(o.platform_fees ?? 0);
+const payout = Number(o.revenue ?? 0);
+const cogs = Number(o.cogs_override ?? o.total_cost ?? 0);
+const profit = gross - fees - cogs;
+
 
               return (
                 <tr key={o.id} className={`border-b last:border-b-0 hover:bg-gray-50 ${rowClass}`}>
