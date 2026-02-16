@@ -36,6 +36,12 @@ type MileageRow = {
   created_at: string;
 };
 
+type OrdersSummary = {
+  gross_revenue: any;
+  platform_fees: any;
+  payout: any;
+};
+
 function fmtGBP(n: number) {
   return new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(
     Number.isFinite(n) ? n : 0
@@ -70,7 +76,7 @@ function downloadCSV(filename: string, rows: any[][]) {
   URL.revokeObjectURL(url);
 }
 
-// UK tax year: 6 April -> 5 April (end is exclusive when querying)
+// UK tax year: 6 April -> 6 April (end exclusive)
 function getUKTaxYearRangeForYear(startYear: number) {
   const start = new Date(Date.UTC(startYear, 3, 6));
   const endExclusive = new Date(Date.UTC(startYear + 1, 3, 6));
@@ -130,13 +136,18 @@ export default function FinancePage() {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // tax year dropdown (default current)
   const currentStartYear = useMemo(() => getCurrentUKTaxYearStartYear(new Date()), []);
   const [taxYearStart, setTaxYearStart] = useState<number>(currentStartYear);
   const range = useMemo(() => getUKTaxYearRangeForYear(taxYearStart), [taxYearStart]);
 
   const [settings, setSettings] = useState<FinanceSettings | null>(null);
-  const [profit, setProfit] = useState<number>(0);
+
+  const [ordersSummary, setOrdersSummary] = useState<OrdersSummary>({
+    gross_revenue: 0,
+    platform_fees: 0,
+    payout: 0,
+  });
+
   const [expenses, setExpenses] = useState<ExpenseRow[]>([]);
   const [mileage, setMileage] = useState<MileageRow[]>([]);
 
@@ -160,11 +171,55 @@ export default function FinancePage() {
   const [trNotes, setTrNotes] = useState<string>("");
   const [trSaving, setTrSaving] = useState(false);
 
+  // totals
+  const expensesTotal = useMemo(
+    () => expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0),
+    [expenses]
+  );
+
+  const totalMiles = useMemo(
+    () => mileage.reduce((sum, r) => sum + Number(r.miles || 0), 0),
+    [mileage]
+  );
+
+  function claimForMiles(miles: number, s: FinanceSettings) {
+    const firstMiles = Math.min(miles, s.mileage_threshold);
+    const afterMiles = Math.max(0, miles - s.mileage_threshold);
+    return firstMiles * s.mileage_rate_first + afterMiles * s.mileage_rate_after;
+  }
+
+  const mileageClaimTotal = useMemo(() => {
+    if (!settings) return 0;
+    return claimForMiles(totalMiles, settings);
+  }, [totalMiles, settings]);
+
+  const gross = Number(ordersSummary.gross_revenue ?? 0) || 0;
+  const fees = Number(ordersSummary.platform_fees ?? 0) || 0;
+  const payout = Number(ordersSummary.payout ?? 0) || 0;
+
+  // YOUR TAX MODEL (no COGS subtraction here because stock/shipping are already in expenses)
+  const profit = useMemo(() => {
+    return gross - fees - (expensesTotal + mileageClaimTotal);
+  }, [gross, fees, expensesTotal, mileageClaimTotal]);
+
+  const taxPot = useMemo(() => {
+    if (!settings) return null;
+    const owners = Math.max(1, settings.owners_count || 2);
+    const perOwnerProfit = profit / owners;
+
+    // don’t show negative “tax owed”
+    const taxableEach = Math.max(0, perOwnerProfit);
+    const estTaxEach = taxableEach * (settings.est_tax_rate || 0.2);
+    const estTaxTotal = estTaxEach * owners;
+
+    return { owners, perOwnerProfit, estTaxEach, estTaxTotal };
+  }, [profit, settings]);
+
   async function loadAll() {
     setLoading(true);
     setErrorMsg("");
 
-    // settings (RLS-safe RPC)
+    // settings
     const { data: sData, error: sErr } = await supabase.rpc("get_finance_settings");
     if (sErr) {
       setErrorMsg(sErr.message);
@@ -181,21 +236,25 @@ export default function FinancePage() {
     };
     setSettings(safeSettings);
 
-    // tax profit (exclude refunded in RPC)
-    const { data: pData, error: pErr } = await supabase.rpc("finance_tax_summary", {
+    // orders summary (gross/fees/payout)
+    const { data: oData, error: oErr } = await supabase.rpc("finance_orders_summary", {
       p_from: range.start,
       p_to: range.endExclusive,
       p_platform: null,
     });
-    if (pErr) {
-      setErrorMsg(pErr.message);
+    if (oErr) {
+      setErrorMsg(oErr.message);
       setLoading(false);
       return;
     }
-    const profitVal = Number((pData?.[0] as any)?.profit ?? 0);
-    setProfit(Number.isFinite(profitVal) ? profitVal : 0);
+    const os = (Array.isArray(oData) ? oData[0] : oData) as OrdersSummary | undefined;
+    setOrdersSummary({
+      gross_revenue: Number(os?.gross_revenue ?? 0),
+      platform_fees: Number(os?.platform_fees ?? 0),
+      payout: Number(os?.payout ?? 0),
+    });
 
-    // expenses in tax year
+    // expenses
     const { data: eData, error: eErr } = await supabase.rpc("list_expenses_in_range", {
       p_from: range.start,
       p_to: range.endExclusive,
@@ -207,7 +266,7 @@ export default function FinancePage() {
     }
     setExpenses((eData ?? []) as ExpenseRow[]);
 
-    // mileage in tax year
+    // mileage
     const { data: mData, error: mErr } = await supabase.rpc("list_mileage_in_range", {
       p_from: range.start,
       p_to: range.endExclusive,
@@ -229,54 +288,6 @@ export default function FinancePage() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [range.start, range.endExclusive]);
-
-  const taxPot = useMemo(() => {
-    if (!settings) return null;
-    const owners = Math.max(1, settings.owners_count || 2);
-    const perOwnerProfit = profit / owners;
-    const estTaxEach = perOwnerProfit * (settings.est_tax_rate || 0.2);
-    const estTaxTotal = estTaxEach * owners;
-    return { owners, perOwnerProfit, estTaxEach, estTaxTotal };
-  }, [profit, settings]);
-
-  // total miles per person
-  const milesByPerson = useMemo(() => {
-    const map: Record<string, number> = { Carrie: 0, Vicky: 0 };
-    for (const r of mileage) {
-      const who = (r.person ?? "").trim();
-      if (!who) continue;
-      map[who] = (map[who] ?? 0) + Number(r.miles || 0);
-    }
-    return map;
-  }, [mileage]);
-
-  const totalMiles = useMemo(
-    () => mileage.reduce((sum, r) => sum + Number(r.miles || 0), 0),
-    [mileage]
-  );
-
-  // Claim calculation (HMRC style bands) for a given miles number
-  function claimForMiles(miles: number, s: FinanceSettings) {
-    const firstMiles = Math.min(miles, s.mileage_threshold);
-    const afterMiles = Math.max(0, miles - s.mileage_threshold);
-    return firstMiles * s.mileage_rate_first + afterMiles * s.mileage_rate_after;
-  }
-
-  const mileageClaimTotal = useMemo(() => {
-    if (!settings) return 0;
-    return claimForMiles(totalMiles, settings);
-  }, [totalMiles, settings]);
-
-  // Claimed by person (simple “each person’s miles gets the same banding”)
-  const mileageClaimCarrie = useMemo(() => {
-    if (!settings) return 0;
-    return claimForMiles(milesByPerson["Carrie"] ?? 0, settings);
-  }, [milesByPerson, settings]);
-
-  const mileageClaimVicky = useMemo(() => {
-    if (!settings) return 0;
-    return claimForMiles(milesByPerson["Vicky"] ?? 0, settings);
-  }, [milesByPerson, settings]);
 
   function exportExpensesCSV() {
     const header = ["Date", "Amount", "Category", "Vendor", "Paid by", "Source", "Notes"];
@@ -411,35 +422,45 @@ export default function FinancePage() {
               </div>
             </div>
 
-            {!settings || !taxPot ? (
-              <div className="text-sm text-gray-600 mt-2">No tax data.</div>
-            ) : (
-              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-4">
-                <div className="rounded-md border bg-gray-50 px-3 py-2">
-                  <div className="text-xs text-gray-600">Profit (tax year)</div>
-                  <div className="text-sm font-semibold">{fmtGBP(profit)}</div>
-                </div>
+            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-5">
+              <div className="rounded-md border bg-gray-50 px-3 py-2">
+                <div className="text-xs text-gray-600">Box 1 · Gross revenue</div>
+                <div className="text-sm font-semibold">{fmtGBP(gross)}</div>
+              </div>
 
-                <div className="rounded-md border bg-gray-50 px-3 py-2">
-                  <div className="text-xs text-gray-600">Profit each (split)</div>
-                  <div className="text-sm font-semibold">{fmtGBP(taxPot.perOwnerProfit)}</div>
-                </div>
+              <div className="rounded-md border bg-gray-50 px-3 py-2">
+                <div className="text-xs text-gray-600">Box 2 · Platform fees</div>
+                <div className="text-sm font-semibold">{fmtGBP(fees)}</div>
+              </div>
 
-                <div className="rounded-md border bg-gray-50 px-3 py-2">
-                  <div className="text-xs text-gray-600">
-                    Est. tax each ({Math.round((settings.est_tax_rate || 0.2) * 100)}%)
-                  </div>
-                  <div className="text-sm font-semibold">{fmtGBP(taxPot.estTaxEach)}</div>
-                </div>
-
-                <div className="rounded-md border bg-gray-50 px-3 py-2">
-                  <div className="text-xs text-gray-600">Est. tax total</div>
-                  <div className="text-sm font-semibold">{fmtGBP(taxPot.estTaxTotal)}</div>
+              <div className="rounded-md border bg-gray-50 px-3 py-2">
+                <div className="text-xs text-gray-600">Box 3 · Expenses + mileage</div>
+                <div className="text-sm font-semibold">{fmtGBP(expensesTotal + mileageClaimTotal)}</div>
+                <div className="text-[11px] text-gray-500">
+                  Expenses {fmtGBP(expensesTotal)} + Mileage {fmtGBP(mileageClaimTotal)}
                 </div>
               </div>
-            )}
 
-            <div className="mt-3 text-xs text-gray-500">Profit excludes refunded orders.</div>
+              <div className="rounded-md border bg-gray-50 px-3 py-2">
+                <div className="text-xs text-gray-600">Box 4 · Profit</div>
+                <div className="text-sm font-semibold">{fmtGBP(profit)}</div>
+              </div>
+
+              <div className="rounded-md border bg-gray-50 px-3 py-2">
+                <div className="text-xs text-gray-600">Box 5 · Est. tax owed</div>
+                <div className="text-sm font-semibold">
+                  {fmtGBP(taxPot?.estTaxTotal ?? 0)}
+                </div>
+                <div className="text-[11px] text-gray-500">
+                  Each: {fmtGBP(taxPot?.estTaxEach ?? 0)}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-3 text-xs text-gray-500">
+              Payout (net received) for reference: <span className="font-semibold">{fmtGBP(payout)}</span>
+              {" "}· Profit excludes refunded orders.
+            </div>
           </section>
 
           {/* EXPENSES */}
@@ -527,16 +548,8 @@ export default function FinancePage() {
             </div>
 
             <div className="mt-2 text-sm text-gray-700">
-              Total miles (tax year): <strong>{totalMiles}</strong> · Estimated claim (total):{" "}
+              Total miles (tax year): <strong>{totalMiles}</strong> · Estimated claim:{" "}
               <strong>{fmtGBP(mileageClaimTotal)}</strong>
-            </div>
-
-            <div className="mt-1 text-sm text-gray-700">
-              Carrie: <strong>{milesByPerson["Carrie"] ?? 0}</strong> miles · Claimed:{" "}
-              <strong>{fmtGBP(mileageClaimCarrie)}</strong>
-              <span className="mx-2">•</span>
-              Vicky: <strong>{milesByPerson["Vicky"] ?? 0}</strong> miles · Claimed:{" "}
-              <strong>{fmtGBP(mileageClaimVicky)}</strong>
             </div>
 
             {mileage.length === 0 ? (
