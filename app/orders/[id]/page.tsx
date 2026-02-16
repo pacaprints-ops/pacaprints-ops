@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { supabase } from "../../lib/supabaseClient";
@@ -13,12 +13,20 @@ type OrderHeader = {
   platform: string | null;
   platform_order_ref: string | null;
   customer_name: string | null;
-  revenue: any;
+
+  revenue: any; // payout (net)
   shipping_cost: any;
   discounts: any;
-  total_cost: any;
+
+  total_cost: any; // FIFO COGS
   total_revenue: any;
   gross_profit: any;
+
+  // NEW
+  gross_revenue: any | null; // customer paid (gross)
+  platform_fees: any; // fees
+  cogs_override: any | null; // historical override
+
   is_settled: boolean;
   is_refunded: boolean;
   refund_notes: string | null;
@@ -61,9 +69,14 @@ export default function OrderEditPage() {
   const [platform, setPlatform] = useState<string>("tiktok");
   const [platformRef, setPlatformRef] = useState<string>("");
   const [customerName, setCustomerName] = useState<string>("");
-  const [revenue, setRevenue] = useState<string>("0");
+
+  // money fields
+  const [grossRevenue, setGrossRevenue] = useState<string>("0"); // gross_revenue
+  const [platformFees, setPlatformFees] = useState<string>("0"); // platform_fees
+  const [revenue, setRevenue] = useState<string>("0"); // payout
   const [shippingCost, setShippingCost] = useState<string>("0");
   const [discounts, setDiscounts] = useState<string>("0");
+  const [cogsOverride, setCogsOverride] = useState<string>(""); // blank = null
 
   // refund notes
   const [refundNotes, setRefundNotes] = useState<string>("");
@@ -82,14 +95,22 @@ export default function OrderEditPage() {
     const header = Array.isArray(h) ? (h[0] as OrderHeader) : (h as OrderHeader);
     setOrder(header);
 
-    // hydrate editable fields from DB (so nothing "goes blank")
+    // hydrate editable fields
     setOrderDate(header.order_date ?? "");
     setPlatform(header.platform ?? "tiktok");
     setPlatformRef(header.platform_order_ref ?? "");
     setCustomerName(header.customer_name ?? "");
+
+    setGrossRevenue(String(header.gross_revenue ?? 0));
+    setPlatformFees(String(header.platform_fees ?? 0));
+
     setRevenue(String(header.revenue ?? 0));
     setShippingCost(String(header.shipping_cost ?? 0));
     setDiscounts(String(header.discounts ?? 0));
+
+    // blank means "null" (no override)
+    setCogsOverride(header.cogs_override === null || header.cogs_override === undefined ? "" : String(header.cogs_override));
+
     setRefundNotes(header.refund_notes ?? "");
 
     const { data: l, error: lErr } = await supabase.rpc("list_order_products", { p_order_id: id });
@@ -137,6 +158,25 @@ export default function OrderEditPage() {
     }
   }
 
+  const computed = useMemo(() => {
+    const gross = toNum(grossRevenue);
+    const fees = toNum(platformFees);
+    const payout = toNum(revenue);
+    const ship = toNum(shippingCost);
+
+    // COGS used: override if provided, else FIFO total_cost (from loaded order)
+    const overrideProvided = cogsOverride.trim() !== "";
+    const cogsUsed = overrideProvided ? toNum(cogsOverride) : Number(order?.total_cost ?? 0);
+
+    // MATCHES TABLE/EDIT behaviour right now
+    const profit = payout - ship - cogsUsed;
+
+    // helpful extra numbers
+    const expectedPayout = gross - fees;
+
+    return { gross, fees, payout, ship, cogsUsed, profit, expectedPayout, overrideProvided };
+  }, [grossRevenue, platformFees, revenue, shippingCost, cogsOverride, order?.total_cost]);
+
   async function saveHeader() {
     if (!orderId || !order) return;
 
@@ -149,6 +189,9 @@ export default function OrderEditPage() {
       return;
     }
 
+    const cogsOverrideValue =
+      cogsOverride.trim() === "" ? null : toNum(cogsOverride);
+
     const { error } = await supabase.rpc("update_order_header", {
       p_order_id: orderId,
       p_order_date: orderDate,
@@ -158,6 +201,10 @@ export default function OrderEditPage() {
       p_revenue: toNum(revenue),
       p_shipping_cost: toNum(shippingCost),
       p_discounts: toNum(discounts),
+
+      p_gross_revenue: toNum(grossRevenue),
+      p_platform_fees: toNum(platformFees),
+      p_cogs_override: cogsOverrideValue,
     });
 
     setSavingHeader(false);
@@ -197,9 +244,7 @@ export default function OrderEditPage() {
           <section className="rounded-lg border bg-white p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <div className="text-sm font-semibold text-gray-900">
-                  Order #{order.order_no}
-                </div>
+                <div className="text-sm font-semibold text-gray-900">Order #{order.order_no}</div>
                 <div className="text-xs text-gray-500">Created: {order.created_at}</div>
               </div>
 
@@ -277,7 +322,27 @@ export default function OrderEditPage() {
               </label>
 
               <label className="text-sm">
-                <div className="text-xs font-medium text-gray-700 mb-1">Revenue (net payout)</div>
+                <div className="text-xs font-medium text-gray-700 mb-1">Gross (customer paid)</div>
+                <input
+                  inputMode="decimal"
+                  className="w-full rounded-md border px-3 py-2 text-sm"
+                  value={grossRevenue}
+                  onChange={(e) => setGrossRevenue(e.target.value)}
+                />
+              </label>
+
+              <label className="text-sm">
+                <div className="text-xs font-medium text-gray-700 mb-1">Platform fees</div>
+                <input
+                  inputMode="decimal"
+                  className="w-full rounded-md border px-3 py-2 text-sm"
+                  value={platformFees}
+                  onChange={(e) => setPlatformFees(e.target.value)}
+                />
+              </label>
+
+              <label className="text-sm">
+                <div className="text-xs font-medium text-gray-700 mb-1">Payout (net received)</div>
                 <input
                   inputMode="decimal"
                   className="w-full rounded-md border px-3 py-2 text-sm"
@@ -296,6 +361,20 @@ export default function OrderEditPage() {
                 />
               </label>
 
+              <label className="text-sm">
+                <div className="text-xs font-medium text-gray-700 mb-1">COGS override (historical)</div>
+                <input
+                  inputMode="decimal"
+                  className="w-full rounded-md border px-3 py-2 text-sm"
+                  value={cogsOverride}
+                  onChange={(e) => setCogsOverride(e.target.value)}
+                  placeholder="Leave blank to use FIFO COGS"
+                />
+                <div className="mt-1 text-[11px] text-gray-500">
+                  Blank = use FIFO ({fmtGBP(order.total_cost)}). Fill for historical orders to show true COGS.
+                </div>
+              </label>
+
               <label className="text-sm sm:col-span-2">
                 <div className="text-xs font-medium text-gray-700 mb-1">Discounts</div>
                 <input
@@ -310,7 +389,9 @@ export default function OrderEditPage() {
             {/* Refund notes appears only when refunded */}
             {order.is_refunded ? (
               <div className="mt-4">
-                <label className="block text-xs font-medium text-gray-700 mb-1">Refund notes (optional)</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Refund notes (optional)
+                </label>
                 <textarea
                   className="w-full rounded-md border px-3 py-2 text-sm"
                   rows={3}
@@ -338,23 +419,41 @@ export default function OrderEditPage() {
               {savingHeader ? "Saving…" : "Save order changes"}
             </button>
 
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {/* Summary cards - MATCH TABLE */}
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-6">
               <div className="rounded-md border bg-gray-50 px-3 py-2">
-                <div className="text-xs text-gray-600">Saved revenue</div>
-                <div className="text-sm font-semibold">{fmtGBP(order.revenue)}</div>
+                <div className="text-xs text-gray-600">Gross</div>
+                <div className="text-sm font-semibold">{fmtGBP(computed.gross)}</div>
               </div>
               <div className="rounded-md border bg-gray-50 px-3 py-2">
-                <div className="text-xs text-gray-600">Saved shipping</div>
-                <div className="text-sm font-semibold">{fmtGBP(order.shipping_cost)}</div>
+                <div className="text-xs text-gray-600">Fees</div>
+                <div className="text-sm font-semibold">{fmtGBP(computed.fees)}</div>
               </div>
               <div className="rounded-md border bg-gray-50 px-3 py-2">
-                <div className="text-xs text-gray-600">COGS</div>
-                <div className="text-sm font-semibold">{fmtGBP(order.total_cost)}</div>
+                <div className="text-xs text-gray-600">Payout</div>
+                <div className="text-sm font-semibold">{fmtGBP(computed.payout)}</div>
+              </div>
+              <div className="rounded-md border bg-gray-50 px-3 py-2">
+                <div className="text-xs text-gray-600">Shipping</div>
+                <div className="text-sm font-semibold">{fmtGBP(computed.ship)}</div>
+              </div>
+              <div className="rounded-md border bg-gray-50 px-3 py-2">
+                <div className="text-xs text-gray-600">COGS used</div>
+                <div className="text-sm font-semibold">
+                  {fmtGBP(computed.cogsUsed)}
+                </div>
+                <div className="text-[11px] text-gray-500">
+                  {computed.overrideProvided ? "Override" : "FIFO"}
+                </div>
               </div>
               <div className="rounded-md border bg-gray-50 px-3 py-2">
                 <div className="text-xs text-gray-600">Profit</div>
-                <div className="text-sm font-semibold">{fmtGBP(order.gross_profit)}</div>
+                <div className="text-sm font-semibold">{fmtGBP(computed.profit)}</div>
               </div>
+            </div>
+
+            <div className="mt-2 text-xs text-gray-500">
+              Expected payout (Gross − Fees): <span className="font-semibold">{fmtGBP(computed.expectedPayout)}</span>
             </div>
           </section>
 
