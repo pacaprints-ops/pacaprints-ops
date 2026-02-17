@@ -13,22 +13,38 @@ function todayISO() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function toNum(s: string) {
-  const n = Number(s);
+// Optional money parser: "" -> null, "1.23" -> 1.23, invalid -> NaN
+function parseMoneyOptional(s: string): number | null {
+  const t = String(s ?? "").trim();
+  if (!t) return null;
+  const n = Number(t);
+  return Number.isFinite(n) ? n : NaN;
+}
+
+// Required money parser: "" -> 0, invalid -> NaN
+function parseMoneyRequired(s: string): number {
+  const t = String(s ?? "").trim();
+  if (!t) return 0;
+  const n = Number(t);
   return Number.isFinite(n) ? n : NaN;
 }
 
 export default function CreateOrderPage() {
   const router = useRouter();
 
-  const [platform, setPlatform] = useState<string>("tiktok"); // ✅ default TikTok
+  const [platform, setPlatform] = useState<string>("tiktok");
   const [platformCustom, setPlatformCustom] = useState<string>("");
 
   const [platformRef, setPlatformRef] = useState<string>("");
-  const [customerName, setCustomerName] = useState<string>(""); // ✅ new field
+  const [customerName, setCustomerName] = useState<string>("");
   const [orderDate, setOrderDate] = useState<string>(todayISO());
-  const [revenue, setRevenue] = useState<string>("");
-  const [shippingCost, setShippingCost] = useState<string>("");
+
+  // money fields (allow blanks for unsettled orders)
+  const [grossRevenue, setGrossRevenue] = useState<string>(""); // what customer paid
+  const [platformFees, setPlatformFees] = useState<string>(""); // total fees
+  const [payout, setPayout] = useState<string>(""); // what you receive (orders.revenue)
+  const [shippingCost, setShippingCost] = useState<string>(""); // shipping cost to you
+  const [discounts, setDiscounts] = useState<string>(""); // optional
 
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string>("");
@@ -82,13 +98,6 @@ export default function CreateOrderPage() {
     // Basic validation
     if (!orderDate) return setErrorMsg("Please select an order date.");
     if (!effectivePlatform) return setErrorMsg("Please select a platform (or enter custom).");
-
-    const revenueNum = toNum(revenue);
-    const shippingNum = shippingCost ? toNum(shippingCost) : 0;
-
-    if (!Number.isFinite(revenueNum)) return setErrorMsg("Revenue must be a number.");
-    if (!Number.isFinite(shippingNum)) return setErrorMsg("Shipping cost must be a number.");
-
     if (!lineItems || lineItems.length === 0) return setErrorMsg("Please add at least 1 line item.");
 
     // Validate line items before saving anything
@@ -100,23 +109,51 @@ export default function CreateOrderPage() {
         return setErrorMsg("Each line needs a quantity of 1 or more.");
     }
 
+    // Parse numbers (allow blanks for gross/fees/payout/discounts)
+    const grossNum = parseMoneyOptional(grossRevenue);
+    const feesNum = parseMoneyOptional(platformFees);
+    const payoutNum = parseMoneyRequired(payout); // create_order needs a number, so blank becomes 0
+    const shipNum = parseMoneyRequired(shippingCost); // blank becomes 0
+    const discNum = parseMoneyOptional(discounts);
+
+    if (grossNum !== null && !Number.isFinite(grossNum))
+      return setErrorMsg("Customer paid (gross) must be a number.");
+    if (feesNum !== null && !Number.isFinite(feesNum))
+      return setErrorMsg("Platform fees must be a number.");
+    if (!Number.isFinite(payoutNum)) return setErrorMsg("Payout must be a number.");
+    if (!Number.isFinite(shipNum)) return setErrorMsg("Shipping cost must be a number.");
+    if (discNum !== null && !Number.isFinite(discNum)) return setErrorMsg("Discounts must be a number.");
+
     setSaving(true);
 
     try {
-      // 1) Create order header
+      // 1) Create order header (payout + shipping are required numeric fields in your existing RPC)
       const { data: orderId, error: headerErr } = await supabase.rpc("create_order", {
         p_order_date: orderDate,
         p_customer_name: customerName.trim() || null,
         p_platform: effectivePlatform,
         p_platform_order_ref: platformRef.trim() || null,
-        p_revenue: revenueNum,
-        p_shipping_cost: Number.isFinite(shippingNum) ? shippingNum : 0,
-        p_discounts: 0,
+        p_revenue: payoutNum, // net payout (can be 0 if not settled yet)
+        p_shipping_cost: shipNum,
+        p_discounts: discNum ?? 0,
       });
 
       if (headerErr) throw headerErr;
 
-      // 2) Save ALL line items
+      // 2) Immediately set the full money breakdown (gross + fees + payout + shipping + discounts)
+      //    (gross/fees can be null when not settled yet)
+      const { error: moneyErr } = await supabase.rpc("update_order_money", {
+        p_order_id: orderId,
+        p_gross_revenue: grossNum,
+        p_platform_fees: feesNum ?? 0,
+        p_payout: payoutNum,
+        p_shipping_cost: shipNum,
+        p_discounts: discNum ?? 0,
+      });
+
+      if (moneyErr) throw moneyErr;
+
+      // 3) Save ALL line items (FIFO costing happens via trigger)
       for (const line of lineItems) {
         const name = String(line.product_name).trim();
 
@@ -142,7 +179,6 @@ export default function CreateOrderPage() {
           productId = newProduct.id;
         }
 
-        // Costing + FIFO via recipe
         const { error: lineErr } = await supabase.rpc("add_order_product", {
           p_order_id: orderId,
           p_recipe_id: line.recipe_id,
@@ -248,15 +284,43 @@ export default function CreateOrderPage() {
 
             <div className="sm:col-span-1">
               <label className="block text-sm font-semibold text-gray-900 mb-1">
-                Revenue (net payout)
+                Customer paid (gross)
               </label>
               <input
                 type="number"
                 step="0.01"
                 placeholder="£0.00"
                 className="w-full rounded-lg border bg-white px-3 py-2 text-sm"
-                value={revenue}
-                onChange={(e) => setRevenue(e.target.value)}
+                value={grossRevenue}
+                onChange={(e) => setGrossRevenue(e.target.value)}
+              />
+            </div>
+
+            <div className="sm:col-span-1">
+              <label className="block text-sm font-semibold text-gray-900 mb-1">Platform fees</label>
+              <input
+                type="number"
+                step="0.01"
+                placeholder="£0.00"
+                className="w-full rounded-lg border bg-white px-3 py-2 text-sm"
+                value={platformFees}
+                onChange={(e) => setPlatformFees(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="sm:col-span-1">
+              <label className="block text-sm font-semibold text-gray-900 mb-1">
+                Payout (net)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                placeholder="£0.00"
+                className="w-full rounded-lg border bg-white px-3 py-2 text-sm"
+                value={payout}
+                onChange={(e) => setPayout(e.target.value)}
               />
             </div>
 
@@ -271,7 +335,24 @@ export default function CreateOrderPage() {
                 onChange={(e) => setShippingCost(e.target.value)}
               />
             </div>
+
+            <div className="sm:col-span-1">
+              <label className="block text-sm font-semibold text-gray-900 mb-1">Discounts</label>
+              <input
+                type="number"
+                step="0.01"
+                placeholder="£0.00"
+                className="w-full rounded-lg border bg-white px-3 py-2 text-sm"
+                value={discounts}
+                onChange={(e) => setDiscounts(e.target.value)}
+              />
+            </div>
           </div>
+
+          <p className="text-xs text-gray-500">
+            You can leave gross/fees/payout blank if the order isn’t settled yet — you can edit later.
+            (Blank payout saves as £0.00 for now.)
+          </p>
         </div>
 
         {/* Line items */}
