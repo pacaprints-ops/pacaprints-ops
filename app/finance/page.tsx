@@ -464,63 +464,81 @@ export default function FinancePage() {
           </section>
 
           {/* EXPENSES */}
-          <section className="rounded-lg border bg-white p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-lg font-semibold text-gray-900">Expenses</h2>
+<section className="rounded-lg border bg-white p-4">
+  <div className="flex flex-wrap items-center justify-between gap-3">
+    <h2 className="text-lg font-semibold text-gray-900">Expenses</h2>
 
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  className="text-sm rounded-md border bg-white px-3 py-2 hover:bg-gray-50"
-                  onClick={() => setAddExpenseOpen(true)}
-                >
-                  Add expense
-                </button>
+    <div className="flex flex-wrap gap-2">
+      <Link
+        href="/finance/expenses"
+        className="text-sm rounded-md border bg-white px-3 py-2 hover:bg-gray-50"
+      >
+        View all (search)
+      </Link>
 
-                <button
-                  type="button"
-                  className="text-sm rounded-md border bg-white px-3 py-2 hover:bg-gray-50 disabled:opacity-50"
-                  onClick={exportExpensesCSV}
-                  disabled={expenses.length === 0}
-                >
-                  Export expenses CSV
-                </button>
-              </div>
-            </div>
+      <button
+        type="button"
+        className="text-sm rounded-md border bg-white px-3 py-2 hover:bg-gray-50"
+        onClick={() => setAddExpenseOpen(true)}
+      >
+        Add expense
+      </button>
 
-            {expenses.length === 0 ? (
-              <div className="text-sm text-gray-600 mt-2">No expenses in this tax year.</div>
-            ) : (
-              <div className="mt-3 overflow-x-auto rounded-md border">
-                <table className="min-w-full text-sm bg-white">
-                  <thead className="border-b bg-gray-50">
-                    <tr className="text-left">
-                      <th className="px-3 py-2 font-semibold">Date</th>
-                      <th className="px-3 py-2 font-semibold">Amount</th>
-                      <th className="px-3 py-2 font-semibold">Category</th>
-                      <th className="px-3 py-2 font-semibold">Vendor</th>
-                      <th className="px-3 py-2 font-semibold">Paid by</th>
-                      <th className="px-3 py-2 font-semibold">Source</th>
-                      <th className="px-3 py-2 font-semibold">Notes</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {expenses.map((e) => (
-                      <tr key={e.id} className="border-b last:border-b-0">
-                        <td className="px-3 py-2">{fmtDate(e.expense_date)}</td>
-                        <td className="px-3 py-2 font-semibold">{fmtGBP(Number(e.amount || 0))}</td>
-                        <td className="px-3 py-2">{e.category}</td>
-                        <td className="px-3 py-2">{e.vendor ?? "—"}</td>
-                        <td className="px-3 py-2">{e.paid_by}</td>
-                        <td className="px-3 py-2">{e.source_type}</td>
-                        <td className="px-3 py-2">{e.notes ?? "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
+      <button
+        type="button"
+        className="text-sm rounded-md border bg-white px-3 py-2 hover:bg-gray-50 disabled:opacity-50"
+        onClick={exportExpensesCSV}
+        disabled={expenses.length === 0}
+      >
+        Export expenses CSV
+      </button>
+    </div>
+  </div>
+
+  {expenses.length === 0 ? (
+    <div className="text-sm text-gray-600 mt-2">No expenses in this tax year.</div>
+  ) : (
+    <>
+      <div className="mt-2 text-xs text-gray-600">
+        Showing last 10 of <span className="font-semibold">{expenses.length}</span> (full searchable log in “View all”)
+      </div>
+
+      <div className="mt-3 overflow-x-auto rounded-md border max-h-[340px] overflow-y-auto">
+        <table className="min-w-full text-sm bg-white">
+          <thead className="sticky top-0 border-b bg-gray-50">
+            <tr className="text-left">
+              <th className="px-3 py-2 font-semibold">Date</th>
+              <th className="px-3 py-2 font-semibold">Amount</th>
+              <th className="px-3 py-2 font-semibold">Category</th>
+              <th className="px-3 py-2 font-semibold">Vendor</th>
+              <th className="px-3 py-2 font-semibold">Paid by</th>
+              <th className="px-3 py-2 font-semibold">Source</th>
+              <th className="px-3 py-2 font-semibold">Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {expenses
+              .slice()
+              .sort((a, b) => (a.expense_date < b.expense_date ? 1 : -1))
+              .slice(0, 10)
+              .map((e) => (
+                <tr key={e.id} className="border-b last:border-b-0">
+                  <td className="px-3 py-2">{fmtDate(e.expense_date)}</td>
+                  <td className="px-3 py-2 font-semibold">{fmtGBP(Number(e.amount || 0))}</td>
+                  <td className="px-3 py-2">{e.category}</td>
+                  <td className="px-3 py-2">{e.vendor ?? "—"}</td>
+                  <td className="px-3 py-2">{e.paid_by}</td>
+                  <td className="px-3 py-2">{e.source_type}</td>
+                  <td className="px-3 py-2">{e.notes ?? "—"}</td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
+    </>
+  )}
+</section>
+
 
           {/* MILEAGE */}
           <section className="rounded-lg border bg-white p-4">
