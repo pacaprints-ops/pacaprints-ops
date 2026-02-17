@@ -71,6 +71,48 @@ function downloadCSV(filename: string, rows: any[][]) {
   URL.revokeObjectURL(url);
 }
 
+function ModalShell({
+  open,
+  title,
+  onClose,
+  children,
+}: {
+  open: boolean;
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <button
+        type="button"
+        aria-label="Close"
+        className="absolute inset-0 bg-black/40"
+        onClick={onClose}
+      />
+      <div className="relative w-full max-w-md rounded-xl border bg-white shadow-lg">
+        <div className="flex items-center justify-between border-b px-4 py-3">
+          <div className="text-sm font-semibold text-gray-900">{title}</div>
+          <button
+            type="button"
+            className="rounded-md border px-2 py-1 text-sm hover:bg-gray-50"
+            onClick={onClose}
+          >
+            ✕
+          </button>
+        </div>
+        <div className="p-4">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+function toNum(s: string) {
+  const n = Number(s);
+  return Number.isFinite(n) ? n : 0;
+}
+
 export default function ExpensesPage() {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
@@ -87,6 +129,18 @@ export default function ExpensesPage() {
 
   const [pageSize, setPageSize] = useState<number>(50);
   const [page, setPage] = useState<number>(0);
+
+  // edit modal
+  const [editOpen, setEditOpen] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editRow, setEditRow] = useState<ExpenseRow | null>(null);
+
+  const [exDate, setExDate] = useState<string>("");
+  const [exAmount, setExAmount] = useState<string>("0");
+  const [exCategory, setExCategory] = useState<string>("");
+  const [exVendor, setExVendor] = useState<string>("");
+  const [exPaidBy, setExPaidBy] = useState<string>("Business");
+  const [exNotes, setExNotes] = useState<string>("");
 
   // debounce search
   useEffect(() => {
@@ -150,6 +204,72 @@ export default function ExpensesPage() {
       e.notes ?? "",
     ]);
     downloadCSV(`expenses_${taxYearLabel(taxYearStart)}_page${page + 1}.csv`, [header, ...lines]);
+  }
+
+  function openEdit(e: ExpenseRow) {
+    setErrorMsg("");
+    setEditRow(e);
+    setExDate(e.expense_date ?? "");
+    setExAmount(String(e.amount ?? 0));
+    setExCategory(e.category ?? "");
+    setExVendor(e.vendor ?? "");
+    setExPaidBy(e.paid_by ?? "Business");
+    setExNotes(e.notes ?? "");
+    setEditOpen(true);
+  }
+
+  async function saveEdit() {
+    if (!editRow) return;
+
+    setErrorMsg("");
+
+    if (!exDate) return setErrorMsg("Date is required.");
+    if (!exCategory.trim()) return setErrorMsg("Category is required.");
+    if (!exPaidBy.trim()) return setErrorMsg("Paid by is required.");
+    const amount = toNum(exAmount);
+    if (!Number.isFinite(amount) || amount <= 0) return setErrorMsg("Amount must be > 0.");
+
+    setEditSaving(true);
+
+    const { error } = await supabase.rpc("update_expense", {
+      p_expense_id: editRow.id,
+      p_expense_date: exDate,
+      p_amount: amount,
+      p_category: exCategory.trim(),
+      p_paid_by: exPaidBy.trim(),
+      p_vendor: exVendor.trim() || null,
+      p_notes: exNotes.trim() || null,
+    });
+
+    setEditSaving(false);
+
+    if (error) {
+      setErrorMsg(error.message);
+      return;
+    }
+
+    setEditOpen(false);
+    setEditRow(null);
+    await load();
+  }
+
+  async function deleteExpense(e: ExpenseRow) {
+    setErrorMsg("");
+    const ok = window.confirm("Delete this expense? This cannot be undone.");
+    if (!ok) return;
+
+    const { error } = await supabase.rpc("delete_expense", {
+      p_expense_id: e.id,
+    });
+
+    if (error) {
+      setErrorMsg(error.message);
+      return;
+    }
+
+    // if we deleted the last row on the last page, step back one page
+    if (rows.length === 1 && page > 0) setPage((p) => Math.max(0, p - 1));
+    else await load();
   }
 
   return (
@@ -250,34 +370,63 @@ export default function ExpensesPage() {
                 <th className="px-3 py-2 font-semibold">Paid by</th>
                 <th className="px-3 py-2 font-semibold">Source</th>
                 <th className="px-3 py-2 font-semibold">Notes</th>
+                <th className="px-3 py-2 font-semibold text-right">Actions</th>
               </tr>
             </thead>
 
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-3 py-4 text-gray-600">
+                  <td colSpan={8} className="px-3 py-4 text-gray-600">
                     Loading…
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-3 py-4 text-gray-600">
+                  <td colSpan={8} className="px-3 py-4 text-gray-600">
                     No expenses found.
                   </td>
                 </tr>
               ) : (
-                rows.map((e) => (
-                  <tr key={e.id} className="border-b last:border-b-0">
-                    <td className="px-3 py-2 whitespace-nowrap">{fmtDate(e.expense_date)}</td>
-                    <td className="px-3 py-2 font-semibold whitespace-nowrap">{fmtGBP(Number(e.amount || 0))}</td>
-                    <td className="px-3 py-2">{e.category}</td>
-                    <td className="px-3 py-2">{e.vendor ?? "—"}</td>
-                    <td className="px-3 py-2">{e.paid_by}</td>
-                    <td className="px-3 py-2">{e.source_type}</td>
-                    <td className="px-3 py-2">{e.notes ?? "—"}</td>
-                  </tr>
-                ))
+                rows.map((e) => {
+                  const canEdit = (e.source_type ?? "manual") === "manual";
+                  return (
+                    <tr key={e.id} className="border-b last:border-b-0">
+                      <td className="px-3 py-2 whitespace-nowrap">{fmtDate(e.expense_date)}</td>
+                      <td className="px-3 py-2 font-semibold whitespace-nowrap">
+                        {fmtGBP(Number(e.amount || 0))}
+                      </td>
+                      <td className="px-3 py-2">{e.category}</td>
+                      <td className="px-3 py-2">{e.vendor ?? "—"}</td>
+                      <td className="px-3 py-2">{e.paid_by}</td>
+                      <td className="px-3 py-2">{e.source_type}</td>
+                      <td className="px-3 py-2">{e.notes ?? "—"}</td>
+
+                      <td className="px-3 py-2 text-right whitespace-nowrap">
+                        {canEdit ? (
+                          <div className="inline-flex gap-2">
+                            <button
+                              type="button"
+                              className="rounded-md border bg-white px-3 py-1.5 text-sm hover:bg-gray-50"
+                              onClick={() => openEdit(e)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              className="rounded-md border bg-white px-3 py-1.5 text-sm hover:bg-gray-50"
+                              onClick={() => deleteExpense(e)}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400">Locked</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -321,6 +470,95 @@ export default function ExpensesPage() {
           </div>
         </div>
       </div>
+
+      {/* Edit Modal */}
+      <ModalShell
+        open={editOpen}
+        title={editRow ? `Edit expense (${editRow.source_type})` : "Edit expense"}
+        onClose={() => {
+          if (editSaving) return;
+          setEditOpen(false);
+          setEditRow(null);
+        }}
+      >
+        <div className="space-y-3">
+          <label className="block text-sm">
+            <div className="text-xs font-medium text-gray-700 mb-1">Date</div>
+            <input
+              type="date"
+              className="w-full rounded-md border px-3 py-2 text-sm"
+              value={exDate}
+              onChange={(e) => setExDate(e.target.value)}
+            />
+          </label>
+
+          <label className="block text-sm">
+            <div className="text-xs font-medium text-gray-700 mb-1">Amount</div>
+            <input
+              inputMode="decimal"
+              className="w-full rounded-md border px-3 py-2 text-sm"
+              value={exAmount}
+              onChange={(e) => setExAmount(e.target.value)}
+            />
+          </label>
+
+          <label className="block text-sm">
+            <div className="text-xs font-medium text-gray-700 mb-1">Category</div>
+            <input
+              className="w-full rounded-md border px-3 py-2 text-sm"
+              value={exCategory}
+              onChange={(e) => setExCategory(e.target.value)}
+            />
+          </label>
+
+          <label className="block text-sm">
+            <div className="text-xs font-medium text-gray-700 mb-1">Vendor</div>
+            <input
+              className="w-full rounded-md border px-3 py-2 text-sm"
+              value={exVendor}
+              onChange={(e) => setExVendor(e.target.value)}
+              placeholder="Optional"
+            />
+          </label>
+
+          <label className="block text-sm">
+            <div className="text-xs font-medium text-gray-700 mb-1">Paid by</div>
+            <select
+              className="w-full rounded-md border bg-white px-3 py-2 text-sm"
+              value={exPaidBy}
+              onChange={(e) => setExPaidBy(e.target.value)}
+            >
+              <option>Business</option>
+              <option>Carrie</option>
+              <option>Vicky</option>
+            </select>
+          </label>
+
+          <label className="block text-sm">
+            <div className="text-xs font-medium text-gray-700 mb-1">Notes</div>
+            <input
+              className="w-full rounded-md border px-3 py-2 text-sm"
+              value={exNotes}
+              onChange={(e) => setExNotes(e.target.value)}
+              placeholder="Optional"
+            />
+          </label>
+
+          <button
+            type="button"
+            className="w-full rounded-md border bg-gray-900 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
+            disabled={editSaving}
+            onClick={saveEdit}
+          >
+            {editSaving ? "Saving…" : "Save changes"}
+          </button>
+
+          <div className="text-xs text-gray-500">
+            Only <strong>manual</strong> expenses can be edited. Purchase-order/system expenses are locked.
+          </div>
+        </div>
+      </ModalShell>
     </main>
   );
 }
+
