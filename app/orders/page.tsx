@@ -2,6 +2,8 @@
 import Link from "next/link";
 import ExportOrdersButton from "./ExportOrdersButton";
 import RevenueQuickEdit from "./RevenueQuickEdit";
+import MoneyQuickEdit from "./MoneyQuickEdit";
+import PlatformQuickEdit from "./PlatformQuickEdit";
 import OrderFlagsQuickToggle from "./OrderFlagsQuickToggle";
 import { supabase } from "../lib/supabaseClient";
 
@@ -14,15 +16,10 @@ type OrderRow = {
   platform_order_ref: string | null;
   customer_name: string | null;
 
-  // payout (net) - existing
-  revenue: any;
-
-  // postage you pay out (your edit page uses this in profit)
+  revenue: any; // payout (net)
   shipping_cost: any;
-
   discounts: any;
-  total_cost: any; // FIFO COGS
-  total_revenue: any;
+  total_cost: any;
   gross_profit: any;
 
   items_summary: string;
@@ -30,10 +27,11 @@ type OrderRow = {
   is_refunded: boolean;
   refund_notes: string | null;
 
-  // new optional fields (will be filled by your rebuild/import)
   gross_revenue?: any;
   platform_fees?: any;
   cogs_override?: any;
+
+  needs_attention?: boolean;
 };
 
 function formatGBP(v: any) {
@@ -176,9 +174,7 @@ export default async function OrdersPage({
         {/* Search */}
         <form action="/orders" method="get" className="flex flex-wrap items-center gap-2">
           {platform ? <input type="hidden" name="platform" value={platform} /> : null}
-          {platformCustom ? (
-            <input type="hidden" name="platform_custom" value={platformCustom} />
-          ) : null}
+          {platformCustom ? <input type="hidden" name="platform_custom" value={platformCustom} /> : null}
           {timeframe ? <input type="hidden" name="timeframe" value={timeframe} /> : null}
           {from ? <input type="hidden" name="from" value={from} /> : null}
           {to ? <input type="hidden" name="to" value={to} /> : null}
@@ -258,36 +254,19 @@ export default async function OrdersPage({
         {timeframe === "custom" ? (
           <form action="/orders" method="get" className="flex flex-wrap items-center gap-2">
             {platform ? <input type="hidden" name="platform" value={platform} /> : null}
-            {platformCustom ? (
-              <input type="hidden" name="platform_custom" value={platformCustom} />
-            ) : null}
+            {platformCustom ? <input type="hidden" name="platform_custom" value={platformCustom} /> : null}
             {q ? <input type="hidden" name="q" value={q} /> : null}
             <input type="hidden" name="timeframe" value="custom" />
 
             <span className="text-sm font-semibold text-gray-900">From</span>
-            <input
-              type="date"
-              name="from"
-              defaultValue={customFrom}
-              className="rounded-lg border bg-white px-3 py-2 text-sm"
-            />
+            <input type="date" name="from" defaultValue={customFrom} className="rounded-lg border bg-white px-3 py-2 text-sm" />
             <span className="text-sm font-semibold text-gray-900">To</span>
-            <input
-              type="date"
-              name="to"
-              defaultValue={customTo}
-              className="rounded-lg border bg-white px-3 py-2 text-sm"
-            />
-            <button className="rounded-lg border bg-white px-3 py-2 text-sm font-semibold">
-              Apply
-            </button>
+            <input type="date" name="to" defaultValue={customTo} className="rounded-lg border bg-white px-3 py-2 text-sm" />
+            <button className="rounded-lg border bg-white px-3 py-2 text-sm font-semibold">Apply</button>
           </form>
         ) : null}
 
-        <Link
-          href="/orders"
-          className="ml-auto rounded-lg border bg-white px-3 py-2 text-sm font-semibold text-gray-900"
-        >
+        <Link href="/orders" className="ml-auto rounded-lg border bg-white px-3 py-2 text-sm font-semibold text-gray-900">
           Reset
         </Link>
       </div>
@@ -298,7 +277,11 @@ export default async function OrdersPage({
             <tr>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 whitespace-nowrap">#</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 whitespace-nowrap">Order date</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 whitespace-nowrap hidden sm:table-cell">Platform</th>
+
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 whitespace-nowrap hidden sm:table-cell">
+                Platform
+              </th>
+
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 whitespace-nowrap">Platform ref</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 whitespace-nowrap hidden md:table-cell">Products</th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 whitespace-nowrap hidden md:table-cell">Customer</th>
@@ -320,9 +303,7 @@ export default async function OrdersPage({
             {rows.map((o) => {
               const rowClass = o.is_refunded ? "bg-gray-50 text-gray-500" : "";
 
-              // Gross/fees will be filled by your rebuild/import.
-              // For now, fall back so nothing breaks.
-              const gross = Number(o.gross_revenue ?? o.revenue ?? 0);
+              const gross = Number(o.gross_revenue ?? 0);
               const fees = Number(o.platform_fees ?? 0);
 
               const payout = Number(o.revenue ?? 0);
@@ -330,9 +311,7 @@ export default async function OrdersPage({
 
               const cogs = Number(o.cogs_override ?? o.total_cost ?? 0);
 
-              // MATCHES your edit page definition:
-              // profit = payout - shipping - cogs
-              // (and when you fill gross/fees later, you can switch to gross-fees too)
+              // keep definition consistent with your edit page:
               const profit = payout - shipping - cogs;
 
               return (
@@ -340,18 +319,16 @@ export default async function OrdersPage({
                   <td className="px-4 py-3 whitespace-nowrap">{o.order_no}</td>
 
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <Link
-                      href={`/orders/${o.id}`}
-                      className="underline decoration-transparent hover:decoration-gray-400"
-                    >
+                    <Link href={`/orders/${o.id}`} className="underline decoration-transparent hover:decoration-gray-400">
                       {formatDateUK(o.order_date)}
                     </Link>
-                    {o.is_refunded ? (
-                      <div className="mt-1 text-xs font-semibold text-red-700">Refunded</div>
-                    ) : null}
+                    {o.is_refunded ? <div className="mt-1 text-xs font-semibold text-red-700">Refunded</div> : null}
                   </td>
 
-                  <td className="px-4 py-3 whitespace-nowrap hidden sm:table-cell">{o.platform ?? "—"}</td>
+                  <td className="px-4 py-3 whitespace-nowrap hidden sm:table-cell">
+                    {o.platform ?? "—"}
+                    <PlatformQuickEdit orderId={o.id} currentPlatform={o.platform ?? null} />
+                  </td>
 
                   <td className="px-4 py-3 whitespace-nowrap">{o.platform_order_ref ?? "—"}</td>
 
@@ -359,16 +336,46 @@ export default async function OrdersPage({
 
                   <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell">{o.customer_name ?? "—"}</td>
 
-                  <td className="px-4 py-3 whitespace-nowrap">{formatGBP(gross)}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    {formatGBP(gross)}
+                    <MoneyQuickEdit
+                      orderId={o.id}
+                      currentValue={gross}
+                      title="Update gross"
+                      label="Customer paid (gross)"
+                      rpcName="update_order_gross"
+                      rpcParam="p_gross_revenue"
+                    />
+                  </td>
 
-                  <td className="px-4 py-3 whitespace-nowrap hidden sm:table-cell">{formatGBP(fees)}</td>
+                  <td className="px-4 py-3 whitespace-nowrap hidden sm:table-cell">
+                    {formatGBP(fees)}
+                    <MoneyQuickEdit
+                      orderId={o.id}
+                      currentValue={fees}
+                      title="Update fees"
+                      label="Platform fees"
+                      rpcName="update_order_fees"
+                      rpcParam="p_platform_fees"
+                    />
+                  </td>
 
                   <td className="px-4 py-3 whitespace-nowrap">
                     {formatGBP(payout)}
                     <RevenueQuickEdit orderId={o.id} currentRevenue={o.revenue} />
                   </td>
 
-                  <td className="px-4 py-3 whitespace-nowrap hidden sm:table-cell">{formatGBP(shipping)}</td>
+                  <td className="px-4 py-3 whitespace-nowrap hidden sm:table-cell">
+                    {formatGBP(shipping)}
+                    <MoneyQuickEdit
+                      orderId={o.id}
+                      currentValue={shipping}
+                      title="Update shipping"
+                      label="Shipping cost"
+                      rpcName="update_order_shipping"
+                      rpcParam="p_shipping_cost"
+                    />
+                  </td>
 
                   <td className="px-4 py-3 whitespace-nowrap hidden sm:table-cell">{formatGBP(cogs)}</td>
 
@@ -380,6 +387,7 @@ export default async function OrdersPage({
                       isSettled={!!o.is_settled}
                       isRefunded={!!o.is_refunded}
                       refundNotes={o.refund_notes}
+                      needsAttention={!!o.needs_attention}
                     />
                   </td>
 
@@ -404,7 +412,7 @@ export default async function OrdersPage({
       </div>
 
       <p className="mt-3 text-xs text-gray-500">
-        Refunded orders are greyed out. Settled shows green. You can toggle both here or inside the edit page.
+        Refunded orders are greyed out. Settled shows green. 🚩 is only available when not settled.
       </p>
     </main>
   );

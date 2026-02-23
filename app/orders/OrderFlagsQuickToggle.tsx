@@ -9,18 +9,21 @@ export default function OrderFlagsQuickToggle({
   isSettled,
   isRefunded,
   refundNotes,
+  needsAttention,
 }: {
   orderId: string;
   isSettled: boolean;
   isRefunded: boolean;
   refundNotes: string | null;
+  needsAttention: boolean;
 }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [localSettled, setLocalSettled] = useState(!!isSettled);
   const [localRefunded, setLocalRefunded] = useState(!!isRefunded);
+  const [localAttention, setLocalAttention] = useState(!!needsAttention);
 
-  async function save(nextSettled: boolean, nextRefunded: boolean) {
+  async function saveFlags(nextSettled: boolean, nextRefunded: boolean) {
     setSaving(true);
 
     // optimistic
@@ -37,9 +40,34 @@ export default function OrderFlagsQuickToggle({
     setSaving(false);
 
     if (error) {
-      // revert if fails
       setLocalSettled(!!isSettled);
       setLocalRefunded(!!isRefunded);
+      alert(error.message);
+      return;
+    }
+
+    // If it becomes settled, hide/clear attention locally too
+    if (nextSettled) setLocalAttention(false);
+
+    router.refresh();
+  }
+
+  async function toggleAttention() {
+    if (localSettled) return; // shouldn’t show anyway, but safe
+
+    const next = !localAttention;
+    setSaving(true);
+    setLocalAttention(next);
+
+    const { error } = await supabase.rpc("set_order_attention", {
+      p_order_id: orderId,
+      p_needs_attention: next,
+    });
+
+    setSaving(false);
+
+    if (error) {
+      setLocalAttention(!!needsAttention);
       alert(error.message);
       return;
     }
@@ -52,7 +80,7 @@ export default function OrderFlagsQuickToggle({
       <button
         type="button"
         disabled={saving}
-        onClick={() => save(!localSettled, localRefunded)}
+        onClick={() => saveFlags(!localSettled, localRefunded)}
         className={`rounded-md border px-2 py-1 text-xs font-semibold disabled:opacity-60 ${
           localSettled ? "bg-green-600 text-white border-green-600" : "bg-white"
         }`}
@@ -64,7 +92,7 @@ export default function OrderFlagsQuickToggle({
       <button
         type="button"
         disabled={saving}
-        onClick={() => save(localSettled, !localRefunded)}
+        onClick={() => saveFlags(localSettled, !localRefunded)}
         className={`rounded-md border px-2 py-1 text-xs font-semibold disabled:opacity-60 ${
           localRefunded ? "bg-red-600 text-white border-red-600" : "bg-white"
         }`}
@@ -72,6 +100,21 @@ export default function OrderFlagsQuickToggle({
       >
         {localRefunded ? "Refunded" : "Refund"}
       </button>
+
+      {/* 🚩 only when NOT settled */}
+      {!localSettled ? (
+        <button
+          type="button"
+          disabled={saving}
+          onClick={toggleAttention}
+          className={`rounded-md border px-2 py-1 text-xs font-semibold disabled:opacity-60 ${
+            localAttention ? "bg-red-50 border-red-300 text-red-700" : "bg-white text-gray-500"
+          }`}
+          title="Needs attention"
+        >
+          🚩
+        </button>
+      ) : null}
     </div>
   );
 }
