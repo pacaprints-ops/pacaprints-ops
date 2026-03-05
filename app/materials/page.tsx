@@ -43,11 +43,76 @@ function fmtDate(iso: string | null) {
   }
 }
 
+function toNum(v: any) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
+type StockLevel = "in" | "low" | "out";
+type StatusFilter = "all" | "in" | "low" | "out";
+
+function getStockLevel(totalQty: number, reorderLevel: number | null): StockLevel {
+  const qty = toNum(totalQty);
+
+  if (qty <= 0) return "out";
+
+  const rl = reorderLevel === null || reorderLevel === undefined ? null : toNum(reorderLevel);
+  if (rl !== null && Number.isFinite(rl) && qty <= rl) return "low";
+
+  return "in";
+}
+
+function StockPill({ level }: { level: StockLevel }) {
+  const cfg =
+    level === "out"
+      ? { label: "OUT", cls: "bg-red-100 text-red-800 border-red-200" }
+      : level === "low"
+        ? { label: "LOW", cls: "bg-amber-100 text-amber-900 border-amber-200" }
+        : { label: "IN", cls: "bg-green-100 text-green-800 border-green-200" };
+
+  return (
+    <span
+      className={[
+        "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold",
+        cfg.cls,
+      ].join(" ")}
+    >
+      {cfg.label}
+    </span>
+  );
+}
+
+function FilterChip({
+  active,
+  children,
+  onClick,
+}: {
+  active: boolean;
+  children: React.ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={[
+        "rounded-lg px-3 py-1.5 text-sm font-semibold transition",
+        active ? "bg-gray-900 text-white" : "border bg-white text-gray-900 hover:bg-gray-50",
+      ].join(" ")}
+    >
+      {children}
+    </button>
+  );
+}
+
 export default function MaterialsPage() {
   const [rows, setRows] = useState<MaterialRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [search, setSearch] = useState<string>("");
+
+  // ✅ NEW: status filter toggle
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [batches, setBatches] = useState<Record<string, BatchRow[]>>({});
@@ -86,19 +151,33 @@ export default function MaterialsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
+  // Compute per-row stock level once (so we can filter + count consistently)
+  const rowsWithLevel = useMemo(() => {
+    return rows.map((r) => ({
+      ...r,
+      _level: getStockLevel(r.total_qty, r.reorder_level) as StockLevel,
+    }));
+  }, [rows]);
+
+  const filteredRows = useMemo(() => {
+    if (statusFilter === "all") return rowsWithLevel;
+    return rowsWithLevel.filter((r) => r._level === statusFilter);
+  }, [rowsWithLevel, statusFilter]);
+
   const counts = useMemo(() => {
-    return rows.reduce(
+    return rowsWithLevel.reduce(
       (acc, r) => {
         acc.total += 1;
-        if (r.status === "out") acc.out += 1;
-        else if (r.status === "low") acc.low += 1;
+        if (r._level === "out") acc.out += 1;
+        else if (r._level === "low") acc.low += 1;
         else acc.in += 1;
+
         acc.stockValue += r.stock_value || 0;
         return acc;
       },
       { total: 0, in: 0, low: 0, out: 0, stockValue: 0 }
     );
-  }, [rows]);
+  }, [rowsWithLevel]);
 
   async function fetchBatches(materialId: string) {
     setBatchesLoading((prev) => ({ ...prev, [materialId]: true }));
@@ -134,7 +213,9 @@ export default function MaterialsPage() {
   function startEditReorder(r: MaterialRow) {
     setErrorMsg("");
     setEditReorderId(r.material_id);
-    setEditReorderValue(r.reorder_level === null || r.reorder_level === undefined ? "" : String(r.reorder_level));
+    setEditReorderValue(
+      r.reorder_level === null || r.reorder_level === undefined ? "" : String(r.reorder_level)
+    );
   }
 
   function cancelEditReorder() {
@@ -173,7 +254,7 @@ export default function MaterialsPage() {
 
     await refreshMaterials();
 
-    // If expanded, refresh its batches too (nice + consistent with your adjust)
+    // If expanded, refresh its batches too
     if (expandedId === materialId) {
       await fetchBatches(materialId);
     }
@@ -214,19 +295,30 @@ export default function MaterialsPage() {
         </div>
       </div>
 
-      <div className="mb-3 flex flex-wrap gap-3 text-sm">
-        <span className="rounded-md border bg-white px-3 py-2">
-          Total: <strong>{counts.total}</strong>
-        </span>
-        <span className="rounded-md border bg-white px-3 py-2">
-          In stock: <strong>{counts.in}</strong>
-        </span>
-        <span className="rounded-md border bg-white px-3 py-2">
-          Low: <strong>{counts.low}</strong>
-        </span>
-        <span className="rounded-md border bg-white px-3 py-2">
-          Out: <strong>{counts.out}</strong>
-        </span>
+      {/* ✅ NEW: filter toggle row */}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <FilterChip active={statusFilter === "all"} onClick={() => setStatusFilter("all")}>
+          All ({counts.total})
+        </FilterChip>
+        <FilterChip active={statusFilter === "in"} onClick={() => setStatusFilter("in")}>
+          In stock ({counts.in})
+        </FilterChip>
+        <FilterChip active={statusFilter === "low"} onClick={() => setStatusFilter("low")}>
+          Low ({counts.low})
+        </FilterChip>
+        <FilterChip active={statusFilter === "out"} onClick={() => setStatusFilter("out")}>
+          Out ({counts.out})
+        </FilterChip>
+
+        {statusFilter !== "all" ? (
+          <button
+            type="button"
+            className="ml-auto rounded-lg border bg-white px-3 py-1.5 text-sm font-semibold hover:bg-gray-50"
+            onClick={() => setStatusFilter("all")}
+          >
+            Clear filter
+          </button>
+        ) : null}
       </div>
 
       {errorMsg ? (
@@ -235,8 +327,10 @@ export default function MaterialsPage() {
 
       {loading ? (
         <div className="text-sm text-gray-600">Loading…</div>
-      ) : rows.length === 0 ? (
-        <div className="text-sm text-gray-600">No materials found.</div>
+      ) : filteredRows.length === 0 ? (
+        <div className="text-sm text-gray-600">
+          No materials found{statusFilter !== "all" ? ` in "${statusFilter}"` : ""}.
+        </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border bg-white">
           <table className="min-w-full text-sm">
@@ -255,7 +349,7 @@ export default function MaterialsPage() {
             </thead>
 
             <tbody>
-              {rows.map((r) => {
+              {filteredRows.map((r) => {
                 const isOpen = expandedId === r.material_id;
                 const list = batches[r.material_id] ?? [];
                 const isBatchLoading = !!batchesLoading[r.material_id];
@@ -263,11 +357,19 @@ export default function MaterialsPage() {
                 const isEditing = editReorderId === r.material_id;
                 const savingThis = !!reorderSaving[r.material_id];
 
+                const level = r._level;
+                const qtyClass =
+                  level === "out"
+                    ? "text-red-800 font-semibold"
+                    : level === "low"
+                      ? "text-amber-900 font-semibold"
+                      : "text-green-800 font-semibold";
+
                 return (
                   <Fragment key={r.material_id}>
                     <tr className="border-b">
                       <td className="px-4 py-3">{r.material_name}</td>
-                      <td className="px-4 py-3">{r.total_qty}</td>
+                      <td className={["px-4 py-3", qtyClass].join(" ")}>{r.total_qty}</td>
                       <td className="px-4 py-3">{r.avg_cost === null ? "—" : fmtGBP(r.avg_cost)}</td>
                       <td className="px-4 py-3">{fmtGBP(r.stock_value)}</td>
                       <td className="px-4 py-3">{r.supplier ?? "—"}</td>
@@ -316,7 +418,9 @@ export default function MaterialsPage() {
                         )}
                       </td>
 
-                      <td className="px-4 py-3">{r.status}</td>
+                      <td className="px-4 py-3">
+                        <StockPill level={level} />
+                      </td>
 
                       <td className="px-4 py-3">
                         <button
@@ -394,4 +498,3 @@ export default function MaterialsPage() {
     </main>
   );
 }
-
