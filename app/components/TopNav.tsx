@@ -1,7 +1,3 @@
-
-
-// pacaprints-ops/app/components/TopNav.tsx
-
 "use client";
 
 import Link from "next/link";
@@ -11,10 +7,13 @@ const tabs = [
   { label: "Dashboard", href: "/dashboard" },
   { label: "Orders", href: "/orders" },
   { label: "Purchases", href: "/purchases" },
-  { label: "Product Sales", href: "/products" }, // ✅ this matches app/products/page.tsx
+  { label: "Product Sales", href: "/products" },
   { label: "Finance", href: "/finance" },
   { label: "Recipes", href: "/recipes" },
   { label: "Materials", href: "/materials" },
+
+  // ✅ NEW PAGE
+  { label: "Seasonal Planner", href: "/seasonal" },
 ];
 
 export default function TopNav() {
