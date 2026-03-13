@@ -1,0 +1,16 @@
+# Local project code — each has its own repo
+projects/
+
+# Claude local settings
+.claude/settings.local.json
+.claude/skills/
+
+# Memory — local only, not shared
+.claude/projects/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# PDFs / local files
+*.pdf
