@@ -8,8 +8,8 @@ At the start of every session, run `hostname` to identify who is using Claude Co
 
 | Hostname | User | Role |
 |----------|------|------|
-| Elliotts | Vicky | Team member |
-| [TBD — update when Carrie first connects] | Carrie | Owner/Manager |
+| Elliotts | Vicky | Owner |
+| PacaPrints | Carrie | Owner |
 
 If the hostname is not in this table, say: "I don't recognise this machine — who am I speaking with?"
 
@@ -29,13 +29,13 @@ Do not proceed with the action until the user explicitly confirms Carrie has app
 
 ### Team Profiles
 
-#### Carrie (Owner / Manager)
-- Has final say on spending, repo changes, and anything structural
-- Machine hostname: **TBD** — update this when Carrie first runs `/gm`
+#### Carrie (Owner)
+- Machine hostname: **PacaPrints**
+- Runs all technical work, finances, platform management, code, and supplier orders
 
-#### Vicky (Team Member)
-- Handles day-to-day tasks, orders, and admin
+#### Vicky (Owner)
 - Machine hostname: **Elliotts**
+- Sorts and packs orders, manages socials and customer communication
 - Subject to alert protocol above — flag anything risky and pause
 
 ---
