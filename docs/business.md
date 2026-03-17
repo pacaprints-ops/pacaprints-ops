@@ -1,7 +1,9 @@
 # Paca — Business Overview
 
 ## The Business
-- **Name:** Pacaprints
+- **Brand family:** Paca (umbrella)
+  - **Paca Prints** — prints, cards and gifts (primary brand)
+  - **Paca Planners** — digital/physical planners (sub-brand / sister brand, in development)
 - **Formerly:** The Digital Vibe (rebranding Jan 2025 → Pacaprints, completing ~Dec 2026)
 - **Website:** pacaprints.com
 - **Based:** Bournemouth, UK
@@ -54,7 +56,20 @@ Everyday people buying prints, cards and gifts for themselves or as presents.
 - **Brand colours:** Mint `#b8e0d2` / Peach `#f7d9c4`
 - **Logo/assets location:** TBD
 
+## Paca Planners (Sub-brand — In Development)
+Paca Planners is a sister brand to Paca Prints, selling branded planners. Everything should feel on-brand with the Paca aesthetic (mint/peach, warm and friendly).
+
+### Planners
+- **Meal Planner** — first product, in progress (linked from pacaprints.com menu)
+- **Wedding Planner** — next planned product
+
+### Marketing / Channels
+- Will be advertised through Paca Prints initially (TikTok, Instagram etc.)
+- Separate Paca Planners TikTok / Instagram: **TBD** — not decided yet
+- Separate website or subdomain: **TBD**
+
 ## Future Plans
+- Grow Paca Planners as a sub-brand alongside Paca Prints
 - Build SaaS products to generate additional income
 - Build internal tools to improve business efficiency
 - Paca Ops (internal dashboard) already in progress

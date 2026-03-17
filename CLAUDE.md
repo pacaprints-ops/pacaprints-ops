@@ -41,7 +41,7 @@ Do not proceed with the action until the user explicitly confirms Carrie has app
 ---
 
 ## About Paca
-Small ecommerce business selling prints, cards and gifts. Also building and coding websites for clients to sell as SaaS products or help their own efficiency.
+Small ecommerce business selling prints, cards and gifts under the **Paca Prints** brand. Expanding into **Paca Planners** — a sister brand selling branded planners (meal planner first, wedding planner next), advertised through Paca Prints channels. Also building and coding websites for clients to sell as SaaS products or help their own efficiency.
 
 - **Public website (storefront):** [www.pacaprints.com](https://www.pacaprints.com)
 - **paca-ops is NOT the public website** — it is an internal operations tool only
