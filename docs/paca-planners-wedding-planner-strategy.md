@@ -1,6 +1,6 @@
 # Paca Planners — Wedding Planner Strategy
 
-> Working document — decisions to be made, thoughts to be added. Not final.
+> Working document — updated 2026-03-17. Build starting.
 
 ---
 
@@ -139,13 +139,25 @@ These are the features that matter most and that no static download can offer.
 - Context-aware product suggestions at the right planning stage
 - Links through to pacaprints.com
 
+### Wedding Details Settings (couple-facing)
+- A settings page inside the planner where the couple fill in everything once:
+  - Both names, wedding date, venue name & address
+  - Ceremony time, reception time
+  - Dress code
+  - Travel, parking, accommodation notes
+  - Message to guests
+  - Menu options (couple adds their own: e.g. Chicken / Beef / Vegetarian) — these appear as choices on the guest RSVP form
+  - Section visibility toggles — show/hide each section on the guest page
+
 ### Guest Page (Wedding Website)
-- Couple customises a public-facing page to share with guests
-- Shows: wedding date, venue, schedule, travel info, dress code
-- Guests RSVP via the page — attendance (day/evening) + food choices
-- RSVP data feeds directly into the couple's guest list — no manual entry
-- Couple controls what is visible; all planning data stays private
-- Replaces the need for a separate wedding website
+- Public shareable page at a unique URL (e.g. `pacaplanners.com/wedding/their-unique-code`)
+- Can also be shared as a QR code (printed on invites etc.)
+- Pulls directly from Wedding Details settings — couple updates once, guest page updates instantly
+- Shows only what the couple has toggled on: date, venue, schedule, travel, dress code, message
+- RSVP form uses the couple's own menu options
+- Guest RSVPs feed directly into the couple's guest list — no manual entry
+- All private planning data (budget, quotes, suppliers) never visible to guests
+- Replaces the need for a separate wedding website (Hitched, Zola etc.)
 
 ---
 
@@ -159,18 +171,58 @@ These are the features that matter most and that no static download can offer.
 
 ---
 
+## Tech Stack
+
+- **Framework:** Next.js (same as menu-planner)
+- **Database / Auth:** Supabase (new project, separate from menu-planner)
+- **Styling:** Tailwind CSS v4
+- **Language:** TypeScript
+- **Hosting:** Vercel
+- **Repo location:** `projects/wedding-planner/` inside paca-brain
+
+## Build Order (Phases)
+
+### Phase 1 — Foundation
+- Scaffold Next.js app
+- Supabase project + auth (sign up, log in, remember me, protected routes)
+- Base layout and Paca Planners branding (mint/peach)
+
+### Phase 2 — Core Planning
+- Dashboard (countdown, budget summary, progress indicators)
+- Budget tracker (categories, spend vs budget)
+- Suppliers & quotes (multiple quotes, pick winner, notes, contact details)
+
+### Phase 3 — Guests
+- Guest list (day/evening, invites sent, RSVP status, food choices)
+- Food count summary for venue handover
+- Table plan builder
+
+### Phase 4 — Wedding Website
+- Wedding Details settings page (couple fills in once)
+- Public guest page (unique URL + QR code)
+- Guest RSVP form (feeds back into guest list)
+- Section visibility toggles
+
+### Phase 5 — Finishing
+- Collaborators (invite partner, maid of honour etc.)
+- To-do & reminders
+- Paca Prints product suggestions (context-aware)
+- Photography schedule builder + export
+
+---
+
 ## What We're NOT Doing (yet)
 
-- A separate Paca Planners website — for now it lives on pacaprints.com
+- A separate Paca Planners website — wedding planner will be its own standalone site
 - Separate social accounts — promoting through Paca Prints channels first
-- Subscription pricing — keep it simple at launch
+- Subscription pricing — one-off fee at launch
 
 ---
 
 ## Open Questions
 
 - [ ] One-off fee or freemium? What price point?
-- [ ] Build the guest page / wedding website feature in v1 or v2? (Direction agreed — it's happening, just a timing question)
+- [ ] Guest page / wedding website — Phase 4 of the build (direction agreed, timing confirmed)
 - [ ] How do we handle the Etsy angle — do we still sell a PDF version there as a lead-in?
 - [ ] Separate Paca Planners social accounts — see `docs/paca-planners-strategy-discussion.md`
 - [ ] Do we want a Paca Planners logo / variant of the Paca brand?
@@ -185,3 +237,7 @@ These are the features that matter most and that no static download can offer.
 | 2026-03-17 | Will integrate Paca Prints product suggestions into the planner | Carrie |
 | 2026-03-17 | Subscription pricing ruled out | Carrie |
 | 2026-03-17 | Planner will include a guest-facing wedding website page — couples don't need a separate wedding website | Carrie |
+| 2026-03-17 | Wedding Details settings page in planner drives the guest page — couple fills in once, guest page updates instantly | Carrie |
+| 2026-03-17 | Couple sets their own menu options — appears as choices on guest RSVP form | Carrie |
+| 2026-03-17 | Own standalone site (not part of pacaprints.com) — `projects/wedding-planner/` | Carrie |
+| 2026-03-17 | Build order confirmed: Foundation → Core Planning → Guests → Wedding Website → Finishing | Carrie |
