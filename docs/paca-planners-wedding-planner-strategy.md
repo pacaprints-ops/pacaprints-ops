@@ -174,11 +174,11 @@ These are the features that matter most and that no static download can offer.
 ## Tech Stack
 
 - **Framework:** Next.js (same as menu-planner)
-- **Database / Auth:** Supabase (new project, separate from menu-planner)
+- **Database / Auth:** Supabase — sharing the menu-planner Supabase project (both free slots are used: menu-planner + paca-ops). Wedding planner tables will be cleanly namespaced. Migrate to own Supabase project if/when it makes sense.
 - **Styling:** Tailwind CSS v4
 - **Language:** TypeScript
 - **Hosting:** Vercel
-- **Repo location:** `projects/wedding-planner/` inside paca-brain
+- **Repo location:** `projects/wedding-planner/` inside paca-brain (already scaffolded)
 
 ## Build Order (Phases)
 
@@ -241,3 +241,5 @@ These are the features that matter most and that no static download can offer.
 | 2026-03-17 | Couple sets their own menu options — appears as choices on guest RSVP form | Carrie |
 | 2026-03-17 | Own standalone site (not part of pacaprints.com) — `projects/wedding-planner/` | Carrie |
 | 2026-03-17 | Build order confirmed: Foundation → Core Planning → Guests → Wedding Website → Finishing | Carrie |
+| 2026-03-17 | Will share menu-planner Supabase project — no free slots remaining. Tables to be namespaced cleanly. | Carrie |
+| 2026-03-17 | Next.js app scaffolded at projects/wedding-planner/ — ready to build when we return | Carrie |
