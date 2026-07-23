@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Order Lookup — Paca Ops Demo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f4; color: #1c1917; min-height: 100vh; }
+
+    header { background: #fff; border-bottom: 1px solid #e7e5e4; padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
+    header h1 { font-size: 18px; font-weight: 600; }
+    header span { font-size: 12px; background: #fef9c3; color: #854d0e; padding: 2px 8px; border-radius: 99px; font-weight: 500; }
+
+    .container { max-width: 860px; margin: 32px auto; padding: 0 24px; }
+
+    .card { background: #fff; border: 1px solid #e7e5e4; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+    .card h2 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .card p { font-size: 13px; color: #78716c; margin-bottom: 16px; }
+
+    .example-pill { display: inline-block; background: #f5f5f4; border: 1px solid #e7e5e4; border-radius: 6px; font-size: 12px; font-family: monospace; padding: 2px 8px; margin: 2px; color: #57534e; cursor: pointer; }
+    .example-pill:hover { background: #e7e5e4; }
+    .examples-label { font-size: 12px; color: #a8a29e; margin-bottom: 6px; }
+
+    textarea { width: 100%; border: 1px solid #e7e5e4; border-radius: 8px; padding: 12px; font-size: 14px; font-family: inherit; resize: vertical; min-height: 90px; outline: none; transition: border-color 0.15s; }
+    textarea:focus { border-color: #a16207; box-shadow: 0 0 0 3px #fef9c3; }
+
+    .btn { display: inline-flex; align-items: center; gap: 6px; background: #a16207; color: #fff; border: none; border-radius: 8px; padding: 10px 20px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.15s; margin-top: 12px; }
+    .btn:hover { background: #854d0e; }
+    .btn svg { width: 16px; height: 16px; }
+
+    .results { display: none; }
+    .results.visible { display: block; }
+
+    .person-block { margin-bottom: 24px; }
+    .person-label { font-size: 13px; font-weight: 600; color: #57534e; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .person-label .badge { background: #fef9c3; color: #854d0e; border-radius: 99px; padding: 2px 10px; font-size: 11px; font-weight: 600; }
+
+    .items-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+    .item-card { background: #fff; border: 1px solid #e7e5e4; border-radius: 10px; padding: 14px 16px; min-width: 120px; flex: 1; max-width: 160px; }
+    .item-card .code { font-size: 20px; font-weight: 700; color: #1c1917; font-family: monospace; }
+    .item-card .type { font-size: 11px; color: #a8a29e; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; margin-bottom: 10px; }
+    .item-card .folder { font-size: 11px; color: #78716c; margin-bottom: 10px; display: flex; align-items: center; gap: 4px; }
+    .item-card a { display: block; text-align: center; background: #f5f5f4; border: 1px solid #e7e5e4; border-radius: 6px; padding: 6px; font-size: 12px; font-weight: 500; color: #1c1917; text-decoration: none; transition: background 0.15s; }
+    .item-card a:hover { background: #e7e5e4; }
+    .item-card.found { border-color: #bbf7d0; }
+    .item-card.found .code { color: #166534; }
+    .item-card.not-found { border-color: #fecaca; }
+    .item-card.not-found .code { color: #991b1b; }
+
+    .divider { border: none; border-top: 1px dashed #e7e5e4; margin: 20px 0; }
+
+    .how-it-works { background: #fafaf9; border: 1px dashed #d6d3d1; border-radius: 10px; padding: 16px 20px; margin-top: 16px; }
+    .how-it-works h3 { font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #57534e; }
+    .how-it-works ol { padding-left: 18px; font-size: 13px; color: #78716c; line-height: 1.8; }
+  </style>
+</head>
+<body>
+
+<header>
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect width="20" height="20" rx="5" fill="#a16207"/><text x="4" y="14" font-size="11" fill="white" font-weight="bold">P</text></svg>
+  <h1>Paca Ops — Order Lookup</h1>
+  <span>DEMO</span>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <h2>Paste order codes</h2>
+    <p>Enter the codes from a customer order, one person per line. Use the examples below to try it.</p>
+
+    <div class="examples-label">Try an example:</div>
+    <div>
+      <span class="example-pill" onclick="loadExample1()">2 adults + girl + boy</span>
+      <span class="example-pill" onclick="loadExample2()">Mum + baby</span>
+      <span class="example-pill" onclick="loadExample3()">Dad only</span>
+    </div>
+
+    <div style="margin-top:14px;">
+      <textarea id="orderInput" placeholder="e.g.
+Adult Male  S2  H4  J2  T3
+Adult Female  S1  H7  J1  D4
+Girl age 6  S2  H3  J2  T1  R5
+Boy age 4  S3  H2  J1  T4"></textarea>
+    </div>
+
+    <button class="btn" onclick="lookup()">
+      <svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd"/></svg>
+      Find Files
+    </button>
+  </div>
+
+  <div class="results card" id="results">
+    <h2>Files needed for this order</h2>
+    <p>Click "Open in Drive" to go straight to the file.</p>
+    <div id="resultsBody"></div>
+  </div>
+
+  <div class="how-it-works">
+    <h3>How the real version would work</h3>
+    <ol>
+      <li>Order comes in on Shopify — customer has filled in their codes</li>
+      <li>You open this page in paca-ops and paste in the codes</li>
+      <li>It shows every file you need with a direct link to Google Drive</li>
+      <li>No more searching through folders — one click gets you there</li>
+    </ol>
+  </div>
+
+</div>
+
+<script>
+  // Drive folder/file links — real IDs from your actual Drive
+  // These will be filled in when we build the real version
+  const DRIVE_BASE = 'https://drive.google.com/file/d/';
+  const FOLDER_BASE = 'https://drive.google.com/drive/folders/';
+
+  const FOLDERS = {
+    'men_jeans':   { label: 'Dad › Clothes › Jeans',   id: '1Vt4IJWfN3B_DiZeTpPCQlJu2-Z8WCfU0' },
+    'men_tshirt':  { label: 'Dad › Clothes › TShirt',  id: '1QRVmEIIwKY4XN8EAMwp5xKf_knzpuTOD' },
+    'men_hoodie':  { label: 'Dad › Clothes › Hoodie',  id: '1yTtoB0shL30JiM7tCfCJCQB1OljDi6g7' },
+    'women_jeans': { label: 'Mum › Sets › Jeans',      id: '1CnSMg2CYI_kr2M04In-EE44lYbROM94i' },
+    'women_dress': { label: 'Mum › Sets › Dress',      id: '18XbD4C3zzwDysXGJr8yqdwkycXb8c9AE' },
+    'girl_jeans':  { label: 'Kids › Girl › Jeans',     id: '' },
+    'boy_jeans':   { label: 'Kids › Boy › Jeans',      id: '' },
+  };
+
+  // Known file IDs from your Drive (partial — real version would have all)
+  const FILES = {
+    'men_j2':  '1VeceY8eENEfm3IGMpY9xUSNlnfaaijr2',
+    'men_j5':  '1Cl2h7Yyrz-j344DS-F6FPFnA9GoseF_h',
+    'men_j19': '1AuOHODYNRuVdgTMNCnG6ZuwvCsr1J-pl',
+  };
+
+  function parseGender(line) {
+    const l = line.toLowerCase();
+    if (l.includes('female') || l.includes('woman') || l.includes('mum') || l.includes('mom') || l.includes('wife')) return 'women';
+    if (l.includes('male') || l.includes('man') || l.includes('dad') || l.includes('husband')) return 'men';
+    if (l.includes('girl')) return 'girl';
+    if (l.includes('boy')) return 'boy';
+    if (l.includes('baby')) return 'baby';
+    return 'unknown';
+  }
+
+  function parseCodes(line) {
+    const codes = [];
+    // Match patterns like J2, T3, H4, S1, D6, R5, P2, JS1, H4A etc.
+    const matches = line.match(/\b([A-Z]{1,2}\d{1,2}[A-Z]?)\b/g) || [];
+    return matches;
+  }
+
+  function getCodeType(code) {
+    const c = code.toUpperCase();
+    if (c.startsWith('S')) return 'Skin tone';
+    if (c.startsWith('JS')) return 'Suspenders';
+    if (c.startsWith('J')) return 'Jeans';
+    if (c.startsWith('H')) return 'Hair style';
+    if (c.startsWith('D')) return 'Dress';
+    if (c.startsWith('T')) return 'T-shirt';
+    if (c.startsWith('P')) return 'Top / babygrow';
+    if (c.startsWith('R')) return 'Ribbon';
+    if (c.startsWith('BC') || c.startsWith('B')) return 'Body';
+    return 'Item';
+  }
+
+  function getFolderLink(code, gender) {
+    const c = code.toUpperCase();
+    if (c.startsWith('J') || c.startsWith('JS')) {
+      const key = gender + '_jeans';
+      return FOLDERS[key] || null;
+    }
+    if (c.startsWith('T') && gender === 'men') return FOLDERS['men_tshirt'];
+    if (c.startsWith('H') && (gender === 'men' || gender === 'women')) return null;
+    if (c.startsWith('D') && gender === 'women') return FOLDERS['women_dress'];
+    return null;
+  }
+
+  function getFileLink(code, gender) {
+    const key = gender + '_' + code.toLowerCase();
+    return FILES[key] || null;
+  }
+
+  function lookup() {
+    const raw = document.getElementById('orderInput').value.trim();
+    if (!raw) return;
+
+    const lines = raw.split('\n').filter(l => l.trim());
+    const resultsEl = document.getElementById('resultsBody');
+    const resultsCard = document.getElementById('results');
+    resultsEl.innerHTML = '';
+
+    lines.forEach((line, i) => {
+      const gender = parseGender(line);
+      const codes = parseCodes(line);
+      if (!codes.length) return;
+
+      const personLabel = line.split(/\b[A-Z]\d/)[0].trim().replace(/,/g, '').trim() || 'Person ' + (i + 1);
+      const genderLabel = gender === 'unknown' ? '' : gender.charAt(0).toUpperCase() + gender.slice(1);
+
+      const block = document.createElement('div');
+      block.className = 'person-block';
+
+      block.innerHTML = `<div class="person-label">
+        <span>${personLabel}</span>
+        ${genderLabel ? `<span class="badge">${genderLabel}</span>` : ''}
+      </div>
+      <div class="items-grid" id="grid-${i}"></div>`;
+
+      if (i > 0) {
+        const hr = document.createElement('hr');
+        hr.className = 'divider';
+        resultsEl.appendChild(hr);
+      }
+
+      resultsEl.appendChild(block);
+
+      const grid = block.querySelector(`#grid-${i}`);
+
+      codes.forEach(code => {
+        const fileId = getFileLink(code, gender);
+        const folder = getFolderLink(code, gender);
+        const found = !!fileId;
+
+        const item = document.createElement('div');
+        item.className = 'item-card ' + (found ? 'found' : (folder ? '' : 'not-found'));
+
+        let linkHtml;
+        if (fileId) {
+          linkHtml = `<a href="${DRIVE_BASE}${fileId}/view" target="_blank">📂 Open file in Drive</a>`;
+        } else if (folder) {
+          linkHtml = `<a href="${FOLDER_BASE}${folder.id}" target="_blank">📁 Open folder in Drive</a>`;
+        } else {
+          linkHtml = `<a href="https://drive.google.com/drive/search?q=${code}+${gender}" target="_blank">🔍 Search in Drive</a>`;
+        }
+
+        item.innerHTML = `
+          <div class="code">${code}</div>
+          <div class="type">${getCodeType(code)}</div>
+          ${folder ? `<div class="folder">📁 ${folder.label}</div>` : ''}
+          ${linkHtml}
+        `;
+        grid.appendChild(item);
+      });
+    });
+
+    resultsCard.classList.add('visible');
+    resultsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function loadExample1() {
+    document.getElementById('orderInput').value =
+`Adult Male  S2  H4  J2  T3
+Adult Female  S1  H7  J1  D4
+Girl age 6  S2  H3  J2  T1  R5
+Boy age 4  S3  H2  J1  T4`;
+  }
+
+  function loadExample2() {
+    document.getElementById('orderInput').value =
+`Mum  S3  H12  J10  P4
+Baby  S3  H2  P2`;
+  }
+
+  function loadExample3() {
+    document.getElementById('orderInput').value =
+`Dad  S2  H5  J19  T5`;
+  }
+</script>
+
+</body>
+</html>

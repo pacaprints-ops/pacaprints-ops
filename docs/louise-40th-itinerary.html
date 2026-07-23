@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Louise's 40th Birthday Weekend</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: #fdfaf3;
+      min-height: 100vh;
+      padding: 24px 16px 48px;
+      overflow-x: hidden;
+    }
+
+    .page {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ── */
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .header .crown {
+      font-size: 2rem;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.4rem;
+      color: #8B6914;
+      letter-spacing: 1px;
+      line-height: 1.1;
+    }
+
+    .header h1 span { font-style: italic; }
+
+    .header .subtitle {
+      margin-top: 10px;
+      font-size: 1rem;
+      color: #A07830;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .header .divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .header .divider::before,
+    .header .divider::after {
+      content: '';
+      width: 80px;
+      height: 1px;
+      background: #E8D080;
+    }
+
+    .header .divider-icon { font-size: 1.1rem; color: #C9A84C; }
+
+    /* ── Info Strip ── */
+    .info-strip {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .info-pill {
+      background: #fff;
+      border: 1px solid #E8D4A0;
+      border-radius: 30px;
+      padding: 7px 18px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #7A5C10;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── Day cards ── */
+    .days {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    @media (min-width: 700px) {
+      .days { grid-template-columns: repeat(3, 1fr); align-items: start; }
+    }
+
+    .day-card {
+      background: #fff;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(180, 140, 20, 0.10);
+    }
+
+    .day-header {
+      padding: 18px 20px 16px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    @media (min-width: 700px) {
+      .day-header { min-height: 96px; padding: 20px 24px 18px; }
+    }
+
+    .friday   .day-header { background: linear-gradient(135deg, #C9A84C, #E8D080); }
+    .saturday .day-header { background: linear-gradient(135deg, #B8870F, #D4AF37); }
+    .sunday   .day-header { background: linear-gradient(135deg, #8B6914, #C9A84C); }
+
+    .day-header .day-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      color: #fff;
+      font-weight: 700;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+
+    .day-header .theme-badge {
+      display: inline-block;
+      margin-top: 8px;
+      background: rgba(255,255,255,0.28);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
+    /* ── Timeline ── */
+    .timeline { padding: 16px 16px 20px; }
+
+    .event {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .event:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 37px;
+      top: 32px;
+      width: 1px;
+      height: calc(100% + 2px);
+      background: #F0E5C0;
+    }
+
+    .friday   .event-dot { background: #C9A84C; }
+    .saturday .event-dot { background: #B8870F; }
+    .sunday   .event-dot { background: #8B6914; }
+
+    .event-time-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+      width: 54px;
+    }
+
+    .event-time {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #A07830;
+      text-align: center;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    .event-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-top: 4px;
+      flex-shrink: 0;
+    }
+
+    .event-body { padding-top: 1px; }
+
+    .event-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #3d2e10;
+      line-height: 1.3;
+    }
+
+    .event-note {
+      font-size: 0.82rem;
+      color: #9a7840;
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    .event-emoji { font-size: 0.85rem; margin-right: 3px; }
+
+    .section-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #C9A84C;
+      margin: 18px 0 10px;
+      padding-bottom: 4px;
+      border-bottom: 1px dashed #E8D4A0;
+    }
+
+    /* ── Travel Section ── */
+    .travel-section {
+      margin-top: 40px;
+    }
+
+    .travel-section h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      color: #8B6914;
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
+    .travel-section .travel-sub {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #A07830;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+
+    .travel-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    @media (min-width: 700px) {
+      .travel-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .travel-card {
+      background: #fff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 3px 16px rgba(180, 140, 20, 0.09);
+    }
+
+    .travel-card-header {
+      padding: 12px 18px;
+      text-align: center;
+    }
+
+    .travel-card-header h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .travel-card-header .travel-direction {
+      font-size: 0.68rem;
+      color: rgba(255,255,255,0.88);
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .travel-outbound .travel-card-header { background: linear-gradient(135deg, #C9A84C, #E8D080); }
+    .travel-return   .travel-card-header { background: linear-gradient(135deg, #8B6914, #C9A84C); }
+
+    .travel-card-body { padding: 14px 18px; }
+
+    .train-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 12px;
+      font-size: 0.9rem;
+    }
+
+    .train-row:last-child { margin-bottom: 0; }
+
+    .train-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+
+    .train-detail { line-height: 1.4; }
+
+    .train-label {
+      font-weight: 700;
+      color: #3d2e10;
+    }
+
+    .train-info {
+      color: #9a7840;
+      font-size: 0.8rem;
+    }
+
+    .train-note {
+      font-size: 0.72rem;
+      color: #C9A84C;
+      font-style: italic;
+      margin-top: 1px;
+    }
+
+    /* ── Tagline ── */
+    .tagline {
+      text-align: center;
+      margin-top: 40px;
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 1.1rem;
+      color: #C9A84C;
+    }
+
+    @media print {
+      body { background: #fff; padding: 20px; }
+      .day-card, .travel-card { box-shadow: none; border: 1px solid #eee; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <span class="crown">🎂</span>
+    <h1>Louise's <span>40th</span></h1>
+    <p class="subtitle">Cardiff · August 2026</p>
+    <div class="divider">
+      <span class="divider-icon">✨</span>
+      <span class="divider-icon">🥂</span>
+      <span class="divider-icon">✨</span>
+    </div>
+  </div>
+
+  <!-- Info Strip -->
+  <div class="info-strip">
+    <div class="info-pill">📅 7–9 August 2026</div>
+    <div class="info-pill">🏨 Cardiff Central Premier Inn</div>
+    <div class="info-pill">👯 8 of us</div>
+    <div class="info-pill">🚂 Travelling by Train</div>
+  </div>
+
+  <!-- Day Cards -->
+  <div class="days">
+
+    <!-- FRIDAY -->
+    <div class="day-card friday">
+      <div class="day-header">
+        <div class="day-name">Friday</div>
+        <div class="theme-badge">✦ Arrival Day ✦</div>
+      </div>
+      <div class="timeline">
+
+        <div class="section-label">Afternoon</div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">3:00<br>PM</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">🏨</span>Arrive &amp; Check In</div>
+            <div class="event-note">Find the hotel, dump the bags, and get settled!</div>
+          </div>
+        </div>
+
+        <div class="section-label">Evening</div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">5:30<br>PM</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">🍽️</span>Dinner &amp; Cocktails</div>
+            <div class="event-note">First drinks of the weekend — cheers Louise! 🥂</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SATURDAY -->
+    <div class="day-card saturday">
+      <div class="day-header">
+        <div class="day-name">Saturday</div>
+        <div class="theme-badge">✦ Cardiff Adventure ✦</div>
+      </div>
+      <div class="timeline">
+
+        <div class="section-label">Morning</div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">9:00<br>AM</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">☕</span>Breakfast</div>
+          </div>
+        </div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">11:00<br>AM</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">🎬</span>Barry Island — Gavin &amp; Stacey Tour</div>
+            <div class="event-note">Lovely jubbly! 🐟</div>
+          </div>
+        </div>
+
+        <div class="section-label">Afternoon</div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">4:00<br>PM</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">✨</span>Chill Time</div>
+            <div class="event-note">Rest up and get ready for the evening</div>
+          </div>
+        </div>
+
+        <div class="section-label">Evening</div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">6:00<br>PM</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">🍽️</span>Dinner</div>
+          </div>
+        </div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">8:00<br>PM</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">🔐</span>Escape Room</div>
+            <div class="event-note">Can we crack it? 🗝️</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SUNDAY -->
+    <div class="day-card sunday">
+      <div class="day-header">
+        <div class="day-name">Sunday</div>
+        <div class="theme-badge">✦ Last Hurrah ✦</div>
+      </div>
+      <div class="timeline">
+
+        <div class="section-label">Morning</div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">10:00<br>AM</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">☕</span>Breakfast</div>
+            <div class="event-note">Slow start — no rush!</div>
+          </div>
+        </div>
+
+        <div class="section-label">Afternoon</div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">12:00<br>PM</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">🏛️</span>Sightseeing in Cardiff</div>
+            <div class="event-note">Explore the city before heading home</div>
+          </div>
+        </div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">AFTN</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">🧳</span>Travel Home</div>
+            <div class="event-note">Big hugs &amp; safe travels everyone 💛</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Travel Section -->
+  <div class="travel-section">
+    <h2>Getting There</h2>
+    <p class="travel-sub">🚂 Train Travel Details 🚂</p>
+
+    <div class="travel-grid">
+
+      <div class="travel-card travel-outbound">
+        <div class="travel-card-header">
+          <h3>Friday — Heading to Cardiff</h3>
+          <div class="travel-direction">Outbound Journey</div>
+        </div>
+        <div class="travel-card-body">
+          <div class="train-row">
+            <div class="train-icon">🚂</div>
+            <div class="train-detail">
+              <div class="train-label">Depart Bournemouth</div>
+              <div class="train-info">10:22</div>
+            </div>
+          </div>
+          <div class="train-row">
+            <div class="train-icon">📍</div>
+            <div class="train-detail">
+              <div class="train-label">Arrive Cardiff</div>
+              <div class="train-info">13:45</div>
+            </div>
+          </div>
+          <div class="train-row">
+            <div class="train-icon">🏨</div>
+            <div class="train-detail">
+              <div class="train-label">Hotel Check-In from 3pm</div>
+              <div class="train-info">Cardiff Central Premier Inn</div>
+              <div class="train-note">Head straight there from the station!</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="travel-card travel-return">
+        <div class="travel-card-header">
+          <h3>Sunday — Heading Home</h3>
+          <div class="travel-direction">Return Journey</div>
+        </div>
+        <div class="travel-card-body">
+          <div class="train-row">
+            <div class="train-icon">🚂</div>
+            <div class="train-detail">
+              <div class="train-label">Return train to Bournemouth</div>
+              <div class="train-info">Check your ticket for departure time</div>
+              <div class="train-note">Book in advance for best prices!</div>
+            </div>
+          </div>
+          <div class="train-row">
+            <div class="train-icon">💛</div>
+            <div class="train-detail">
+              <div class="train-label">Safe travels everyone</div>
+              <div class="train-info">What a weekend! 🎂</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="tagline">Happy 40th, Louise — here's to you! 🥂</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ella's Hen Do · Bride's Copy</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: #fdf6f0;
+      min-height: 100vh;
+      padding: 24px 16px 48px;
+      overflow-x: hidden;
+    }
+
+    .page {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    /* ── Header ── */
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .header .crown {
+      font-size: 2rem;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.4rem;
+      color: #b5536a;
+      letter-spacing: 1px;
+      line-height: 1.1;
+    }
+
+    .header h1 span { font-style: italic; }
+
+    .header .subtitle {
+      margin-top: 10px;
+      font-size: 1rem;
+      color: #a07080;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .header .bride-note {
+      margin-top: 14px;
+      font-size: 0.88rem;
+      color: #c97a8a;
+      font-style: italic;
+      font-family: 'Playfair Display', serif;
+    }
+
+    .header .divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .header .divider::before,
+    .header .divider::after {
+      content: '';
+      width: 80px;
+      height: 1px;
+      background: #e8b4be;
+    }
+
+    .header .divider-icon { font-size: 1.1rem; color: #d4849a; }
+
+    /* ── Day cards ── */
+    .days {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    @media (min-width: 700px) {
+      .days { grid-template-columns: repeat(3, 1fr); align-items: start; }
+    }
+
+    .day-card {
+      background: #fff;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(181, 83, 106, 0.08);
+    }
+
+    .day-header {
+      padding: 18px 20px 16px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    @media (min-width: 700px) {
+      .day-header { min-height: 96px; padding: 20px 24px 18px; }
+    }
+
+    .friday   .day-header { background: linear-gradient(135deg, #b5536a, #d4849a); }
+    .saturday .day-header { background: linear-gradient(135deg, #9b5de5, #c77dff); }
+    .sunday   .day-header { background: linear-gradient(135deg, #e07c4e, #f4a26a); }
+
+    .day-header .day-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .day-header .theme-badge {
+      display: inline-block;
+      margin-top: 8px;
+      background: rgba(255,255,255,0.25);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
+    /* ── Outfit strip ── */
+    .outfit-strip {
+      background: #fdf0f4;
+      border-bottom: 1px dashed #f0dde3;
+      padding: 10px 16px;
+      font-size: 0.78rem;
+      color: #a06070;
+      line-height: 1.5;
+    }
+
+    .outfit-strip strong {
+      color: #b5536a;
+      font-weight: 700;
+    }
+
+    .outfit-strip .surprise {
+      color: #9b5de5;
+      font-style: italic;
+      font-weight: 700;
+    }
+
+    /* ── Timeline ── */
+    .timeline { padding: 16px 16px 20px; }
+
+    .event {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .event:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 37px;
+      top: 32px;
+      width: 1px;
+      height: calc(100% + 2px);
+      background: #f0dde3;
+    }
+
+    .friday   .event-dot { background: #b5536a; }
+    .saturday .event-dot { background: #9b5de5; }
+    .sunday   .event-dot { background: #e07c4e; }
+
+    .event-time-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+      width: 54px;
+    }
+
+    .event-time {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #a07080;
+      text-align: center;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    .event-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-top: 4px;
+      flex-shrink: 0;
+    }
+
+    .event-body { padding-top: 1px; }
+
+    .event-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #3d2030;
+      line-height: 1.3;
+    }
+
+    .event-note {
+      font-size: 0.82rem;
+      color: #9a7080;
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    .event-emoji { font-size: 0.85rem; margin-right: 3px; }
+
+    .section-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #c9a0aa;
+      margin: 18px 0 10px;
+      padding-bottom: 4px;
+      border-bottom: 1px dashed #f0dde3;
+    }
+
+    /* ── Tagline ── */
+    .tagline {
+      text-align: center;
+      margin-top: 40px;
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 1.1rem;
+      color: #c9879a;
+    }
+
+    @media print {
+      body { background: #fff; padding: 20px; }
+      .day-card { box-shadow: none; border: 1px solid #eee; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <span class="crown">👰</span>
+    <h1>Ella's <span>Hen Do</span></h1>
+    <p class="subtitle">Butlins · May 2026</p>
+    <p class="bride-note">This one's just for you, bride-to-be 💕</p>
+    <div class="divider">
+      <span class="divider-icon">🌸</span>
+      <span class="divider-icon">🥂</span>
+      <span class="divider-icon">🌸</span>
+    </div>
+  </div>
+
+  <!-- Day Cards -->
+  <div class="days">
+
+    <!-- FRIDAY -->
+    <div class="day-card friday">
+      <div class="day-header">
+        <div class="day-name">Friday</div>
+        <div class="theme-badge">✦ Last Night of Freedom ✦</div>
+      </div>
+      <div class="outfit-strip">
+        👗 <strong>You:</strong> White &nbsp;|&nbsp; <strong>Us:</strong> All in black &nbsp;|&nbsp; <span class="surprise">You'll have a little something extra for the night... 🤫</span>
+      </div>
+      <div class="timeline">
+
+        <div class="section-label">Arrival</div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">2:00<br>PM</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">🍹</span>Welcome Drinks &amp; Music</div>
+            <div class="event-note">First stop — get those drinks in! 🥂</div>
+          </div>
+        </div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">3:30–4<br>PM</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">🏠</span>Check-In</div>
+            <div class="event-note">Get settled, freshen up &amp; keep the drinks flowing</div>
+          </div>
+        </div>
+
+        <div class="section-label">Afternoon</div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">AFTN</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">🃏</span>Room Time</div>
+            <div class="event-note">Drinks, games, dinner — at our own pace</div>
+          </div>
+        </div>
+
+        <div class="section-label">Evening</div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">8:00<br>PM</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">🎶</span>Black Lace · Opening Night</div>
+            <div class="event-note">Your surprise accessory gets its big debut tonight 🤫✨</div>
+          </div>
+        </div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">9:00<br>PM</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">🎤</span>Go West Pop Duo</div>
+          </div>
+        </div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">10:45<br>PM</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">👑</span>Queen Tribute Party</div>
+            <div class="event-note">End the night like royalty 💜</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SATURDAY -->
+    <div class="day-card saturday">
+      <div class="day-header">
+        <div class="day-name">Saturday</div>
+        <div class="theme-badge">✦ 80s Workout Gear ✦</div>
+      </div>
+      <div class="outfit-strip">
+        💜 <strong>Theme:</strong> 80s Workout &nbsp;|&nbsp; <span class="surprise">Your outfit is sorted — trust us 😏🎁</span>
+      </div>
+      <div class="timeline">
+
+        <div class="section-label">Morning</div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">MORN</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">☀️</span>Slow Start</div>
+            <div class="event-note">Lazy morning, late breakfast or brunch</div>
+          </div>
+        </div>
+
+        <div class="section-label">Midday</div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">12:00<br>PM</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">🎡</span>Fairground Rides Open</div>
+          </div>
+        </div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">1:30<br>PM</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">🎱</span>Bingo Bango</div>
+          </div>
+        </div>
+
+        <div class="section-label">Afternoon</div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">AFTN</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">🃏</span>Room Time</div>
+            <div class="event-note">Drinks, games, chill, sort dinner</div>
+          </div>
+        </div>
+
+        <div class="section-label">Evening</div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">8:00<br>PM</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">🎧</span>Silent Disco</div>
+          </div>
+        </div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">11:00<br>PM</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">🎤</span>Whitney Houston Tribute</div>
+            <div class="event-note">I will always love youuuu 🎵</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SUNDAY -->
+    <div class="day-card sunday">
+      <div class="day-header">
+        <div class="day-name">Sunday</div>
+        <div class="theme-badge">✦ Bride Era ✦</div>
+      </div>
+      <div class="outfit-strip">
+        👰 <strong>Your look:</strong> Bride top · Veil or bride bow · Bride socks 🧦
+      </div>
+      <div class="timeline">
+
+        <div class="section-label">Morning</div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">MORN</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">☕</span>Slow Morning</div>
+            <div class="event-note">No rush — last lovely morning together 💕</div>
+          </div>
+        </div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">11:30<br>AM</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">🤠</span>Line Dancing</div>
+          </div>
+        </div>
+
+        <div class="section-label">Afternoon</div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">LUNCH</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">🍽️</span>Lunch Together</div>
+          </div>
+        </div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">1:30<br>PM</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">🦊</span>Basil Brush Live</div>
+            <div class="event-note">Optional — for those that fancy it!</div>
+          </div>
+        </div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">2:00<br>PM</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">🔫</span>Laser Tag · £15pp</div>
+            <div class="event-note">Wear trainers! 👟</div>
+          </div>
+        </div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">AFTER</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">🧳</span>Goodbyes &amp; Pack Up</div>
+            <div class="event-note">Big hugs all round 💕</div>
+          </div>
+        </div>
+
+        <div class="section-label">Evening (staying Monday)</div>
+
+        <div class="event">
+          <div class="event-time-col">
+            <div class="event-time">8:00<br>PM</div>
+            <div class="event-dot"></div>
+          </div>
+          <div class="event-body">
+            <div class="event-title"><span class="event-emoji">🎶</span>Live Music</div>
+            <div class="event-note">Last night — relaxed send-off 🥂</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <div class="tagline">Here's to the bride-to-be — we love you, Ella 🥂👰</div>
+
+</div>
+</body>
+</html>
