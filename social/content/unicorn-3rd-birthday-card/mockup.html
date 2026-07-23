@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Unicorn 3rd Birthday Card — Paca Prints</title>
+  <link href="https://fonts.googleapis.com/css2?family=Varela+Round&family=Sacramento&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 40px;
+      background: #bbb;
+    }
+    .preview-label {
+      font-family: sans-serif;
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="preview-label">Instagram Feed Post — 1080×1080px (shown at 50% scale)</div>
+
+  <div style="width: 1100px; height: 560px; overflow: hidden;">
+    <div id="post" style="
+      width: 1080px;
+      height: 1080px;
+      transform: scale(0.5);
+      transform-origin: top left;
+      position: relative;
+      overflow: hidden;
+      background: #fceee4;
+    ">
+
+      <!-- Soft background surface — very subtle warm gradient feel -->
+      <div style="
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse at 60% 40%, #f7d9c4 0%, #fceee4 70%);
+      "></div>
+
+      <!-- Subtle surface shadow at bottom to suggest the card is resting on something -->
+      <div style="
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        height: 260px;
+        background: linear-gradient(to top, rgba(200,160,130,0.12) 0%, transparent 100%);
+      "></div>
+
+      <!-- Card image — the hero, large, slightly tilted -->
+      <div style="
+        position: absolute;
+        top: 80px;
+        left: 50%;
+        transform: translateX(-50%) rotate(3deg);
+        width: 510px;
+        height: 724px;
+        border-radius: 5px;
+        overflow: hidden;
+        background: white;
+        box-shadow:
+          0 2px 4px rgba(150,100,70,0.08),
+          0 12px 40px rgba(150,100,70,0.22),
+          0 40px 80px rgba(150,100,70,0.14),
+          inset 0 0 0 1px rgba(0,0,0,0.06);
+      ">
+        <img
+          src="../../assets/front%20cover.png"
+          style="width: 100%; height: 100%; object-fit: contain; display: block;"
+          alt="Unicorn 3rd Birthday Card"
+        >
+      </div>
+
+      <!-- Small logo — bottom left, subtle -->
+      <div style="
+        position: absolute;
+        bottom: 38px;
+        left: 48px;
+      ">
+        <img
+          src="../../assets/PacaPrints%20Logo%20.png"
+          style="width: 130px; display: block; mix-blend-mode: multiply; opacity: 0.85;"
+          alt="Paca Prints"
+        >
+      </div>
+
+      <!-- Price + CTA — bottom right -->
+      <div style="
+        position: absolute;
+        bottom: 52px;
+        right: 52px;
+        text-align: right;
+      ">
+        <div style="
+          font-family: 'Sacramento', cursive;
+          font-size: 38px;
+          color: #3d2c00;
+          line-height: 1.1;
+        ">Unicorn 3rd Birthday Card</div>
+        <div style="
+          font-family: 'Varela Round', Arial, sans-serif;
+          font-size: 28px;
+          color: #3d2c00;
+          margin-top: 6px;
+          opacity: 0.75;
+        ">£3.59 · link in bio</div>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>
