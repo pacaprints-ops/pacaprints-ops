@@ -3,7 +3,6 @@ projects/
 
 # Claude local settings
 .claude/settings.local.json
-.claude/skills/
 
 # Memory — local only, not shared
 .claude/projects/
