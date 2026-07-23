@@ -66,6 +66,20 @@ Use a mix of these across the week. Aim for 80% value/lifestyle, 20% promotional
 
 ---
 
+## Logo
+
+| File | Use |
+|------|-----|
+| `social/assets/logo.png` | Main logo — use on light/white/peach backgrounds |
+| `social/assets/logo-white.png` | White version — use on dark or mint backgrounds |
+
+- Always place in a corner (bottom-right preferred, top-left if the layout suits it)
+- Never stretch, rotate, or recolour the logo
+- Give it breathing room — don't crowd it with other elements
+- Minimum size: ~180px wide in a 1080px canvas
+
+---
+
 ## Visual Style
 
 > **TBD — to be decided together.** This section will be updated as we develop a consistent look.
