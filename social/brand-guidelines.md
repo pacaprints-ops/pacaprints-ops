@@ -70,24 +70,48 @@ Use a mix of these across the week. Aim for 80% value/lifestyle, 20% promotional
 
 | File | Use |
 |------|-----|
-| `social/assets/logo.png` | Main logo — use on light/white/peach backgrounds |
-| `social/assets/logo-white.png` | White version — use on dark or mint backgrounds |
+| `social/assets/PacaPrints Logo .png` | Main logo — use on light/white/peach backgrounds |
 
-- Always place in a corner (bottom-right preferred, top-left if the layout suits it)
-- Never stretch, rotate, or recolour the logo
-- Give it breathing room — don't crowd it with other elements
-- Minimum size: ~180px wide in a 1080px canvas
+- The logo is the full brand mark: cute alpaca character inside a mint circle + "PacaPrints" wordmark ("Paca" in peach/pink, "Prints" in mint)
+- Always place **top-centre** on every post — this is consistent across all content
+- Never place in a corner, never stretch, rotate, or recolour
+- Size: approximately 220–260px wide on a 1080px canvas
+- Give it breathing room — at least 30px clear space around it
+- **The current logo PNG has a white background** — for best results on coloured backgrounds, Carrie needs to export a version with a transparent background and save it as `social/assets/PacaPrints Logo .png` (replacing the current file)
 
 ---
 
 ## Visual Style
 
-> **TBD — to be decided together.** This section will be updated as we develop a consistent look.
+Derived from existing brand posts — this is the established look.
 
-Placeholder notes:
-- Brand colours (mint + peach) should feature in every visual
-- Clean and uncluttered — let the product breathe
-- Warm, natural-feeling imagery preferred over harsh studio shots
+### Overall feel
+Warm, cute, playful, characterful. Not corporate, not edgy, not dark. The brand has personality through its alpaca mascot and rounded aesthetic — let that do the heavy lifting, not aggressive typography or dark colour schemes.
+
+### Layout rules
+- **Logo always top-centre** — the full alpaca + wordmark mark
+- **Peach (`#f7d9c4`) is the dominant background colour** for most posts
+- **Mint (`#b8e0d2`) is used as an accent** — backgrounds for panels, dividers, CTA buttons, split-screen halves
+- A soft **split-background** (mint top / peach bottom, or peach with a mint curved panel) is a signature layout
+- **Rounded corners on everything** — product images, panels, buttons, boxes. Nothing should have a sharp corner
+- **Dark warm brown text** (`#3d2c00` or similar) — never pure black, never white on peach
+- **Pill-shaped CTA buttons** — rounded rectangle, mint or coral fill
+
+### Typography in visuals
+- Headlines: **Varela Round** — bold, friendly, rounded. Can be large and statement-making
+- Accents/sub-labels: **Sacramento** — script, elegant, used sparingly for category labels or occasion names
+- Keep text short and punchy — let the visual breathe
+
+### Decorative elements
+- Small alpaca/llama silhouette illustrations as scatter accents (teal/mint coloured)
+- Sparkle/star motifs
+- Leaf/botanical accents in mint
+- All decorative elements should feel cute and light — never heavy
+
+### Tone in visuals
+- Warm and humorous — even "bold" campaigns should feel friendly, not aggressive
+- The copy does the personality work; the design stays warm and inviting
+- Product images shown with soft drop shadows and rounded frames
 
 ---
 
