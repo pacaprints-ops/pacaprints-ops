@@ -23,7 +23,12 @@ async function generateImage(htmlFilePath) {
   const browser = await puppeteer.launch({
     executablePath: EDGE_PATH,
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-web-security',
+      '--allow-file-access-from-files'
+    ]
   });
 
   try {
@@ -31,14 +36,23 @@ async function generateImage(htmlFilePath) {
     await page.setViewport({ width: 1200, height: 1200, deviceScaleFactor: 1 });
     await page.goto(fileUrl, { waitUntil: 'networkidle0', timeout: 30000 });
 
-    // Remove scale transform so we capture at full native resolution
+    // Remove scale transform and any clipping so we capture at full native resolution
     await page.evaluate(() => {
       const post = document.getElementById('post');
       if (post) {
         post.style.transform = 'none';
         post.style.transformOrigin = 'top left';
+        // Remove overflow:hidden on parent wrappers so nothing is clipped
+        let el = post.parentElement;
+        while (el && el !== document.body) {
+          el.style.overflow = 'visible';
+          el.style.height = 'auto';
+          el.style.width = 'auto';
+          el = el.parentElement;
+        }
       }
-      // Hide the browser-preview label if present
+      document.body.style.margin = '0';
+      document.body.style.padding = '0';
       document.querySelectorAll('.preview-label').forEach(el => el.remove());
     });
 

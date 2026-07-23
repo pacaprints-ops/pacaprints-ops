@@ -15,8 +15,7 @@ Read all three files before doing anything else:
 3. `social/best-practices.md` — Instagram and TikTok specs and strategy
 
 Also check the following asset files before proceeding:
-- `social/assets/logo.png` — main logo (for light backgrounds)
-- `social/assets/logo-white.png` — white logo (for dark/coloured backgrounds)
+- `social/assets/PacaPrints Logo .png` — main logo (for peach/light backgrounds)
 - `social/assets/products/` — any product images relevant to the request
 
 If logo files exist, they MUST be included in the mockup HTML using a relative `<img>` tag. If they don't exist yet, add a clearly labelled placeholder box where the logo will go.
