@@ -1,0 +1,8 @@
+{
+  "name": "paca-social-tools",
+  "version": "1.0.0",
+  "description": "Image generation for Paca social content",
+  "dependencies": {
+    "puppeteer-core": "latest"
+  }
+}

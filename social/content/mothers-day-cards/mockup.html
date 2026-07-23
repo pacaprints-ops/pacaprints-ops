@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Paca Prints — Mother's Day Cards Mockup</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 40px;
+      background: #f0f0f0;
+      font-family: sans-serif;
+    }
+    .preview-label {
+      font-family: sans-serif;
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="preview-label">Instagram Feed Post — 1080×1080px (shown at 50% scale)</div>
+
+  <!-- Post canvas at 50% scale — id="post" is used by generate-image.js to capture at full resolution -->
+  <div id="post" style="
+    width: 1080px;
+    height: 1080px;
+    transform: scale(0.5);
+    transform-origin: top left;
+    background-color: #f7d9c4;
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+  ">
+
+    <!-- Mint border inset -->
+    <div style="
+      position: absolute;
+      top: 28px;
+      left: 28px;
+      right: 28px;
+      bottom: 28px;
+      border: 3px solid #b8e0d2;
+      box-sizing: border-box;
+      pointer-events: none;
+    "></div>
+
+    <!-- Brand label -->
+    <div style="
+      position: absolute;
+      top: 72px;
+      width: 100%;
+      text-align: center;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 30px;
+      font-weight: 300;
+      letter-spacing: 6px;
+      color: #b8e0d2;
+      text-transform: uppercase;
+    ">PACA PRINTS</div>
+
+    <!-- Product image placeholder -->
+    <div style="
+      position: absolute;
+      top: 160px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 620px;
+      height: 480px;
+      background: #ecdcc8;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.10);
+    ">
+      <!-- Card mockup — fanned cards -->
+      <div style="position: relative; width: 420px; height: 340px;">
+
+        <!-- Card 1 (left, rotated) -->
+        <div style="
+          position: absolute;
+          left: 0px;
+          top: 30px;
+          width: 200px;
+          height: 280px;
+          background: #fff;
+          border-radius: 6px;
+          transform: rotate(-8deg);
+          box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        ">
+          <div style="
+            width: 160px;
+            height: 240px;
+            background: #f7d9c4;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Georgia, serif;
+            font-size: 18px;
+            color: #b8896a;
+            text-align: center;
+            padding: 16px;
+            box-sizing: border-box;
+            line-height: 1.5;
+          ">Happy Mother's Day</div>
+        </div>
+
+        <!-- Card 2 (centre, straight) -->
+        <div style="
+          position: absolute;
+          left: 110px;
+          top: 10px;
+          width: 200px;
+          height: 280px;
+          background: #fff;
+          border-radius: 6px;
+          box-shadow: 0 8px 28px rgba(0,0,0,0.16);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 2;
+        ">
+          <div style="
+            width: 160px;
+            height: 240px;
+            background: #b8e0d2;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Georgia, serif;
+            font-size: 17px;
+            color: #3a3a3a;
+            text-align: center;
+            padding: 16px;
+            box-sizing: border-box;
+            line-height: 1.5;
+          ">For the best Mum ♥</div>
+        </div>
+
+        <!-- Card 3 (right, rotated) -->
+        <div style="
+          position: absolute;
+          left: 220px;
+          top: 30px;
+          width: 200px;
+          height: 280px;
+          background: #fff;
+          border-radius: 6px;
+          transform: rotate(7deg);
+          box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        ">
+          <div style="
+            width: 160px;
+            height: 240px;
+            background: #f7d9c4;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Georgia, serif;
+            font-size: 16px;
+            color: #b8896a;
+            text-align: center;
+            padding: 16px;
+            box-sizing: border-box;
+            line-height: 1.5;
+          ">You're basically my favourite person 🌸</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Small mint ribbon accent -->
+    <div style="
+      position: absolute;
+      top: 158px;
+      left: 50%;
+      margin-left: -210px;
+      width: 420px;
+      height: 6px;
+      background: #b8e0d2;
+      opacity: 0.6;
+      border-radius: 3px;
+    "></div>
+
+    <!-- Headline -->
+    <div style="
+      position: absolute;
+      top: 680px;
+      width: 100%;
+      text-align: center;
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 58px;
+      font-weight: bold;
+      color: #3a3a3a;
+      line-height: 1.2;
+      padding: 0 80px;
+      box-sizing: border-box;
+    ">Cards that actually say something.</div>
+
+    <!-- Sub-text -->
+    <div style="
+      position: absolute;
+      top: 860px;
+      width: 100%;
+      text-align: center;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 26px;
+      font-weight: 300;
+      color: #3a3a3a;
+      opacity: 0.65;
+      letter-spacing: 1px;
+    ">Mother's Day Cards — pacaprints.com</div>
+
+    <!-- CTA strip -->
+    <div style="
+      position: absolute;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #b8e0d2;
+      color: #3a3a3a;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      padding: 18px 60px;
+      border-radius: 50px;
+      white-space: nowrap;
+    ">Shop now — link in bio</div>
+
+  </div>
+
+</body>
+</html>

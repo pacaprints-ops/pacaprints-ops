@@ -7,6 +7,9 @@ projects/
 # Memory — local only, not shared
 .claude/projects/
 
+# Dependencies
+node_modules/
+
 # OS
 .DS_Store
 Thumbs.db
